@@ -1,0 +1,149 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta charset="UTF-8" />
+<div th:replace="plugins/include_head_script.html"></div>
+<link type="text/css" th:href="@{/lib/upload/ssi-uploader.min.css}"
+	rel="stylesheet">
+
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+		<!-- 导入头部标题栏内容 -->
+		<div th:replace="plugins/include_body_header.html"></div>
+		<!-- 导入左边菜单项 -->
+		<div th:replace="plugins/include_left_menu.html :: param(3,31)"></div>
+		<div class="content-wrapper text-center">
+			<legend>
+				<label>&nbsp;修改印章制作单位</label>
+			</legend>
+			<div class="col-md-12" style="margin: auto;" id="adminDiv">
+				<form action="#" method="post" class="form-horizontal" id="sealForm">
+					<fieldset>
+						<div>
+							<div class="form-group" id="aidDiv">
+								<label class="col-md-3 control-label" for="aid">账号：</label>
+								<div class="col-md-5">
+									<input class="form-control" type="text" id="aid" name="aid"
+										 disabled="disabled">
+								</div>
+								<div class="col-md-2">
+									<span id="aidMsg"></span>
+								</div>
+							</div>
+							
+							<div class="form-group" id="smnameDiv">
+								<label class="col-md-3 control-label" for="smname">单位名称：</label>
+								<div class="col-md-5">
+									<input class="form-control" type="text" id="smname"
+										name="smname" placeholder="单位名称">
+								</div>
+								<div class="col-md-2">
+									<span id="smnameMsg"></span>
+								</div>
+							</div>
+							<div class="form-group" id="smphoneDiv">
+								<label class="col-md-3 control-label" for="smphone">联系方式：</label>
+								<div class="col-md-5">
+									<input class="form-control" type="text" id="smphone"
+										name="smphone" placeholder="">
+								</div>
+								<div class="col-md-2">
+									<span id="smphoneMsg"></span>
+								</div>
+							</div>
+							<div class="form-group" id="passwordDiv">
+								<label class="col-md-3 control-label" for="password">密码：</label>
+								<div class="col-md-5">
+									<input class="form-control" type="password" id="password"
+										name="password" >
+								</div>
+								<div class="col-md-2">
+									<span id="passwordMsg"></span>
+								</div>
+							</div>
+							<div class="form-group" id="confPWDiv">
+								<label class="col-md-3 control-label" for="confPW">确认密码：</label>
+								<div class="col-md-5">
+									<input class="form-control" type="password" id="confPW"
+										name="confPW" placeholder="">
+								</div>
+								<div class="col-md-2">
+									<span id="confPWMsg"></span>
+								</div>
+							</div>
+							<div class="form-group" id="smdescDiv">
+								<label class="col-md-3 control-label" for="smdesc">详细信息：</label>
+								<div class="col-md-5">
+									<textarea rows="10" cols="53" id="smdesc" name="smdesc"></textarea>
+								</div>
+								<div class="col-md-2">
+									<span id="smdescMsg"></span>
+								</div>
+							</div>
+							
+						</div>
+
+						<div class="form-group">
+							<div class="col-md-5 col-md-offset-3" style="margin-top: 50px;">
+								<button type="submit" class="btn btn-primary"
+									data-loading-text="添加中..." id="addSealBtn">修改</button>
+								<button type="reset" class="btn btn-warning" v-on:click="reset">重置</button>
+							</div>
+						</div>
+					</fieldset>
+				</form>
+				<div id="alertDiv" style="position: relative; top: -150px;"></div>
+			</div>
+		</div>
+		<!-- 导入公司尾部认证信息及右边工具设置栏 -->
+		<div th:replace="plugins/include_footer_and_right_menu.html"></div>
+		<div class="control-sidebar-bg"></div>
+	</div>
+	<!-- 导入css、js -->
+	<div th:replace="plugins/include_foot_script.html"></div>
+	<script type="text/javascript" th:src="@{/js/vue.min.js}"></script>
+</body>
+<script type="text/javascript" th:src="@{/js/util.js}"></script>
+<script th:inline="javascript">
+var context = [[@{/}]]; 
+	$(function() {
+		var aid = getQueryString("aid");
+		validateParam("#sealForm", {
+			"smphone" : { //针对此name元素进行验证
+				required : true//此字段不能为空
+			},"smname" : { //针对此name元素进行验证
+				required : true//此字段不能为空
+			},"confPW" : { //针对此name元素进行验证
+				equalTo:password
+			}
+		}, function() {
+			$("#addSealBtn").button("loading");
+			$.post(context+"back/actions/admin/update",{
+				smname:$("#smname").val()
+				,smphone:$("#smphone").val()
+				,aid:$("#aid").val()
+				,password:$("#password").val()
+				,smdesc:$("#smdesc").val()
+			},function(data){
+				$("#addSealBtn").button("reset");
+				operateAlert("#alertDiv", true, "修改成功！", "修改失败！");
+				setTimeout(function(){
+                    window.close();
+                },1000);
+			});
+		});
+		$.post(context+"back/actions/admin/show",{
+			aid:aid
+		},function(data){
+			data.result;
+			$("#aid").val(data.result.aid);
+			$("#smname").val(data.result.smname);
+			$("#smphone").val(data.result.smphone);
+			$("#smdesc").val(data.result.smdesc);
+			console.log(data);
+		});
+	});
+	
+</script>
+</html>

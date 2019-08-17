@@ -1,0 +1,303 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta charset="UTF-8" />
+<div th:replace="plugins/include_head_script.html"></div>
+<link type="text/css" th:href="@{/lib/upload/ssi-uploader.min.css}"
+	rel="stylesheet">
+
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+		<!-- 导入头部标题栏内容 -->
+		<div th:replace="plugins/include_body_header.html"></div>
+		<!-- 导入左边菜单项 -->
+		<div th:replace="plugins/include_left_menu.html :: param(2,22)"></div>
+		<div class="content-wrapper text-center">
+			<legend>
+				<label>&nbsp;修改印章</label>
+			</legend>
+			<div class="col-md-8">
+				<form action="#" method="post" class="form-horizontal" id="sealForm">
+					<fieldset>
+						<div class="form-group">
+							<label class="col-md-3 control-label">印章编号：</label>
+							<div class="col-md-5">
+								<span class="form-control" type="text" disabled id="sid" name="sid"
+									placeholder="印章名称">{{seal.sid}}</span>
+							</div>
+						</div>
+						<div id="snameDiv">
+							<div class="form-group">
+								<label class="col-md-3 control-label" for="sname">印章名称：</label>
+								<div class="col-md-5">
+									<input class="form-control" type="text" id="sname" name="sname"
+										placeholder="印章名称" v-model="seal.sname">
+								</div>
+								<div class="col-md-2">
+									<span id="snameMsg"></span>
+								</div>
+							</div>
+							<div class="form-group" id="cnameDiv">
+								<label class="col-md-3 control-label" for="cname">单位名称：</label>
+								<div class="col-md-5">
+									<input class="form-control" disabled="disabled" type="text"
+										id="cname" name="cname" placeholder="" v-model="seal.cname">
+								</div>
+								<div class="col-md-2">
+									<a class="btn btn-primary" v-bind:href="seal.url">查看单位</a>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-3 control-label" for="sname">印章图片：</label>
+								<div class="col-md-5">
+									<div id="sealPhotoDiv">
+										<input type="file" multiple id="file" name="file"
+											v-show="false" />
+									</div>
+									<button class="btn btn-primary " type="button"
+										v-if="addMethodStatus==0" v-on:click="addMethod"
+										style="margin-top: 10px;">选择</button>
+									<button class="btn btn-success" type="button"
+										style="margin-top: 10px;" v-if="addMethodStatus==1"
+										v-on:click="uploadFile">上传</button>
+									<button class="btn btn-danger" type="button"
+										style="margin-top: 10px;"
+										v-if="addMethodStatus==1 || addMethodStatus == 2 || addMethodStatus == 4"
+										v-on:click="createSealPhoto">在线生成</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<div class="col-md-5 col-md-offset-3"
+								style="margin-left: 150px; margin-top: 50px;">
+								<button type="submit" class="btn btn-primary"
+									data-loading-text="修改..." id="addSealBtn">修改</button>
+							</div>
+						</div>
+					</fieldset>
+				</form>
+				<div id="alertDiv"></div>
+			</div>
+			<div class="col-md-4">
+				<div id="sPhotoDiv"
+					style="border: 1px solid #adadad; width: 300px; height: 300px; position: relative; right: 100px;"></div>
+			</div>
+		</div>
+		<!-- 导入公司尾部认证信息及右边工具设置栏 -->
+		<div th:replace="plugins/include_footer_and_right_menu.html"></div>
+		<div class="control-sidebar-bg"></div>
+	</div>
+	<!-- 导入css、js -->
+	<div th:replace="plugins/include_foot_script.html"></div>
+	<script type="text/javascript" th:src="@{/js/vue.min.js}"></script>
+	
+	<div class="modal fade" id="createSealInfo" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button class="close" type="button" data-dismiss="modal"
+						aria-hidden="true">&times;</button>
+					<h1>选择模板</h1>
+					<div class="container">
+						<div class="row">
+							<div class="col-md-2">
+								<div id="sealMenu" class="carousel slide" style="width: 160px;">
+									<ol class="carousel-indicators">
+									</ol>
+									<div class="carousel-inner">
+										<div v-bind:class="s.index == 0?'item active':'item'"
+											v-for="s in sealTemplates">
+											<div class="carousel-caption">模板{{s.index}}</div>
+											<img v-bind:src="s.name" width="150px;">
+										</div>
+									</div>
+									<a href="#sealMenu" class="carousel-control left"
+										data-slide="prev">&lsaquo;</a> <a href="#sealMenu"
+										class="carousel-control right" data-slide="next">&rsaquo;</a>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<form action="" id="sealInfo">
+									<table class="table">
+										<tr>
+											<td class="text-right" width="30%"><label
+												for="mainTitle">主文字：</label></td>
+											<td><input type="text" size="25" id="mainTitle"
+												name="mainTitle" /></td>
+										</tr>
+										<tr v-show="tIndex== 1||tIndex== 5||tIndex== 6 ">
+											<td class="text-right"><label for="viceTitle">副文字：</label></td>
+											<td><input type="text" size="25" id="viceTitle"
+												name="viceTitle" /></td>
+										</tr>
+										<tr v-show="tIndex== 3||tIndex== 4 ||tIndex== 5||tIndex== 6">
+											<td class="text-right"><label for="centerTitle">中心文字：</label></td>
+											<td><input type="text" size="25" id="centerTitle"
+												name="centerTitle" /></td>
+										</tr>
+										<tr v-show="tIndex== 2 || tIndex== 4">
+											<td class="text-right"><label for="topTitle">抬头文字：</label></td>
+											<td><input type="text" size="25" id="topTitle"
+												name="topTitle" /></td>
+										</tr>
+									</table>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-primary" data-loading-text="正在生成中..."
+						id="buildSealBtn" v-on:click="buildSeal">生成印章</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript" th:src="@{/js/util.js}"></script>
+<script type="text/javascript" th:src="@{/js/city.js}"></script>
+<script type="text/javascript" th:src="@{/lib/upload/ssi-uploader.js}"></script>
+<script th:inline="javascript">
+var context = [[@{/}]]; 
+	$(function() {
+		$.validator.addMethod("photoNotNull",
+				function(value, element, params) {
+					if(document.getElementById("sealImg")  == null){
+						return false;
+					}else{
+						return true;
+					}
+					
+				}, function() {
+					return "图片不能为空";
+				});
+		validateParam("#sealForm", {
+			"sname" : { //针对此name元素进行验证
+				required : true//此字段不能为空
+				//rangelength: [3,6],//设置范围长度
+				,photoNotNull : true
+			
+			}
+		}, function() {
+			$("#addSealBtn").button("loading");
+			var sid=getQueryString("sid");
+			var sname=$("#sname").val();
+			$.post(context+"back/actions/seal/update",{
+				sid:sid
+				,sname:sname
+				,photo:app.fileName
+			},function(data){
+				console.log(data);
+				$("#addSealBtn").button("reset");
+				//$("#sealImg").remove();
+				operateAlert("#alertDiv", data.state, "修改成功", "修改失败");
+			})
+			
+		});
+	});
+	var app = new Vue({
+		el : ".content-wrapper",
+		data:{
+			addMethodStatus:0
+			,seal:{sid:1131,sname:"ewq",cname:"dsa",photo:"seal-0.png",cid:"312"}
+			,fileName:""
+		},
+		methods: {
+			addMethod:function(){
+				app.addMethodStatus = 1;
+			}
+			,uploadFile:function(){
+				//$(".ssi-uploader").show();
+				app.addMethodStatus = 2;
+				$("#sealPhotoDiv").html('<input type="file" data-validate="required:" multiple id="sealPhoto" name="sealPhoto" v-show="false" />');
+				$("#sealPhoto").ssi_uploader({
+					url:context+'back/actions/seal/uploadPhoto' 
+					,preview:false
+					,locale:"gr"
+					,maxNumberOfFiles:1
+					,allowed:['jpg','gif','txt','png','pdf']
+					,onUpload:function(data){
+						app.fileName = data.result;
+						$("#sPhotoDiv").html("<img src='"+context+"temp/seal/"+data.result+"' id='sealImg' style='width: 300px; height: 300px;' />")		
+						$("#sealForm").valid();
+					}
+				});
+			}
+			,createSealPhoto:function(){
+				app.addMethodStatus = 0;
+				$(".ssi-uploader").remove();
+				$("#sealPhoto").remove();
+				$("#createSealInfo").modal("toggle");
+			}
+			,reset:function(){
+				$("#sealImg").remove();
+			},loadData:function(){
+				var sid = getQueryString("sid");
+				$.post(context+"back/actions/seal/show",{
+					sid:sid
+				},function(data){
+					app.seal = data.result;
+					app.seal['url'] = context + "back/company/company_show?cid="+app.seal.cid;
+					app.fileName = app.seal.photo;
+					$("#sPhotoDiv").html("<img src='"+context+"upload/seal/"+app.seal.photo+"' id='sealImg'  style='width:300px;height:300px;' />")
+				});
+			}
+		}
+	});
+	
+	app.loadData();
+	var createSealInfo = new Vue({
+		el:"#createSealInfo"
+		,data:{
+			sealTemplates:[
+				{index:0,name:context+"img/seal/seal-0.png"}
+				,{index:1,name:context+"img/seal/seal-1.png"}
+				,{index:2,name:context+"img/seal/seal-2.png"}
+				,{index:3,name:context+"img/seal/seal-3.png"}
+				,{index:4,name:context+"img/seal/seal-4.png"}
+				,{index:5,name:context+"img/seal/seal-5.png"}
+				,{index:6,name:context+"img/seal/seal-6.png"}
+			]
+			,tIndex:0
+		}
+		,methods:{
+			buildSeal:function(){
+				$("#buildSealBtn").button("loading");
+				var mainTitle = $("#mainTitle").val();
+				var viceTitle = $("#viceTitle").val();
+				var centerTitle = $("#centerTitle").val();
+				var topTitle = $("#topTitle").val();
+				/* console.log("正在生成" +createSealInfo.tIndex + " , 号模板");
+				console.log("mainTitle：" +mainTitle);
+				console.log("viceTitle：" +viceTitle);
+				console.log("centerTitle:" +centerTitle);
+				console.log("topTitle:" +topTitle); */
+				$.post(context+"back/actions/seal/createPhoto",{
+					mainTitle:mainTitle
+					,viceTitle:viceTitle
+					,centerTitle:centerTitle
+					,topTitle:topTitle
+					,version:createSealInfo.tIndex
+				},function(data){
+					app.fileName = data.result;
+					$("#sPhotoDiv").html("<img src='"+context+"temp/seal/"+data.result+"' id='sealImg' style='width:300px;height:300px;' />")		
+					$("#buildSealBtn").button("reset");
+					$("#createSealInfo").modal("toggle");
+					$("#sealForm").valid();
+				})
+				
+			}
+		}
+	});
+	$("#sealMenu").carousel("pause");
+	$("#sealMenu").on("slid.bs.carousel",function(){
+		var src = $("[class='item active']").find("img").attr("src");
+		createSealInfo.tIndex= src.substring(src.indexOf('-')+1,src.indexOf('.'));
+		$("#viceTitle").val("");
+		$("#centerTitle").val("");
+		$("#topTitle").val("");
+	});
+</script>
+</html>

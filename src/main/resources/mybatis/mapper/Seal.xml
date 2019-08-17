@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.bcsfxy.boot.dao.ISealDAO">
+	<insert id="doCreate" parameterType="Seal">
+		INSERT INTO
+		seal(cid,aid,sname,photo,status,smid)
+		VALUES(#{cid},#{aid},#{sname},#{photo},#{status},#{smid})
+	</insert>
+	<select id="findById" parameterType="Integer" resultType="Seal">
+		SELECT
+		sid,s.cid cid,sname ,c.cname cname,aid,photo,sdate,s.status FROM seal
+		s
+		LEFT JOIN company c ON s.cid=c.cid
+		WHERE sid=#{sid}
+	</select>
+	<select id="findAllByCompany" parameterType="String" resultType="Seal">
+		SELECT sid,sname,aid,photo,sdate,status,smid,smdate FROM seal WHERE cid=#{cid}
+	</select>
+	<select id="findSplit" parameterType="java.util.Map" resultType="Seal">
+		SELECT sid,s.cid cid,sname ,c.cname cname,aid,photo,sdate,s.status,s.smdate
+		FROM seal s
+		LEFT JOIN company c ON s.cid=c.cid
+		<where>
+			<foreach collection="map" index="key" item="value">
+				<if test="value!= null and value !='%%' ">
+					AND ${key} LIKE #{value}
+				</if>
+			</foreach>
+			AND (s.status = 1 OR s.status = 3)
+		</where>
+	</select>
+	<select id="findSplitAudit" parameterType="java.util.Map" resultType="Seal">
+		SELECT sid,s.cid cid,sname ,c.cname cname,aid,photo,sdate,s.status
+		FROM seal s
+		LEFT JOIN company c ON s.cid=c.cid
+		<where>
+			<foreach collection="map" index="key" item="value">
+				<if test="value!= null and value !='%%' ">
+					AND ${key} LIKE #{value}
+				</if>
+			</foreach>
+			AND (s.status = 0 OR s.status = 4)
+		</where>
+	</select>
+	<select id="findSplitBySM" parameterType="java.util.Map" resultType="Seal">
+		SELECT sid,s.cid cid,sname ,c.cname cname,aid,photo,sdate,s.status,s.smdate
+		FROM seal s
+		LEFT JOIN company c ON s.cid=c.cid
+		<where>
+			<foreach collection="map" index="key" item="value">
+				<if test="value!= null and value !='%%' ">
+					AND ${key} LIKE #{value}
+				</if>
+			</foreach>
+			AND s.smid=#{smid}
+			AND s.status=1
+		</where>
+	</select>
+	<select id="findSplitBySMDeliver" parameterType="java.util.Map" resultType="Seal">
+		SELECT sid,s.cid cid,sname ,c.cname cname,aid,photo,sdate,s.status,s.smdate
+		FROM seal s
+		LEFT JOIN company c ON s.cid=c.cid
+		<where>
+			<foreach collection="map" index="key" item="value">
+				<if test="value!= null and value !='%%' ">
+					AND ${key} LIKE #{value}
+				</if>
+			</foreach>
+			AND s.smid=#{smid}
+			AND s.status!=1
+		</where>
+	</select>
+	<delete id="doRemoveById" parameterType="Integer">
+		DELETE FROM seal WHERE
+		sid=#{sid}
+	</delete>
+	<update id="doUpdate" parameterType="Seal">
+		UPDATE seal
+		<set>
+			<if test="aid != null">
+				aid =#{aid},
+			</if>
+			<if test="sname != null">
+				sname =#{sname},
+			</if>
+			<if test="photo != null">
+				photo =#{photo},
+			</if>
+			<if test="sdate != null">
+				sdate =#{sdate},
+			</if>
+			<if test="status != null">
+				status=#{status},
+			</if>
+			<if test="smid != null">
+				smid=#{smid}
+			</if>
+			<if test="smdate != null">
+				smdate=#{smdate}
+			</if>
+		</set>
+		WHERE sid=#{sid}
+	</update>
+</mapper>

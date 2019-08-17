@@ -1,0 +1,26 @@
+<!DOCTYPE>
+<html>
+	<head>
+		<meta charset="UTF-8"/>
+		<div th:replace="plugins/include_head_script.html"></div>
+	<script type="text/javascript" th:src="@{/js/vue.min.js}"></script>
+	
+	</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+		<!-- 导入头部标题栏内容 -->
+		<div th:replace="plugins/include_body_header.html"></div>
+		<!-- 导入左边菜单项 -->
+		<div th:replace="plugins/include_left_menu.html"></div>
+		<div class="content-wrapper text-center" style="background-repeat: no-repeat;
+  background-size: 100% 100%; background-image: url(../img/seal_login_bg.png);">
+			<!-- 此处编写需要显示的页面 --> 
+		</div>
+		<!-- 导入公司尾部认证信息及右边工具设置栏 -->
+		<div th:replace="plugins/include_footer_and_right_menu.html"></div>
+		<div class="control-sidebar-bg"></div>
+	</div>
+	<!-- 导入css、js -->
+	<div th:replace="plugins/include_foot_script.html"></div>
+</body>
+</html>

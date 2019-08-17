@@ -1,0 +1,154 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta charset="UTF-8" />
+<div th:replace="plugins/include_head_script.html"></div>
+<script type="text/javascript" th:src="@{/js/vue.min.js}"></script>
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+		<!-- 导入头部标题栏内容 -->
+		<div th:replace="plugins/include_body_header.html"></div>
+		<!-- 导入左边菜单项 -->
+		<div th:replace="plugins/include_left_menu.html :: param(1,11)"></div>
+		<div class="content-wrapper text-center">
+			<!-- 此处编写需要显示的页面 -->
+			<table style="margin: auto;" >
+				<tr>
+					<td>所属省份：</td>
+					<td style="width: 150px;"><span id="provinceSpan"> <select
+							id="province" class="form-control"></select>
+					</span></td>
+					<td>&nbsp;&nbsp;所属城市：</td>
+					<td style="width: 150px;"><span id="citySpan"> <select
+							id="city" class="form-control form-group-sm"></select>
+					</span></td>
+				</tr>
+				<tr>
+					<td>单位编号：</td>
+					<td><input type="text" class="form-control"name="cid" id="cid"></td>
+					<td>&nbsp;&nbsp;单位名称：</td>
+					<td><input type="text" class="form-control"name="cname" id="cname"></td>
+				</tr>
+
+			</table>
+			<button v-on:click="query" type="button" data-loading-text="正在查询..." class="btn btn-primary" style="margin: 10px; width: 160px;" id="query">
+				<span class="glyphicon glyphicon-search"></span>&nbsp;查询
+			</button>
+			
+			<div>{{companyListMessage}}</div>
+			<div v-show="queryStatus && companyList != null && companyList.length >0" >
+					<table style="word-break:break-all; word-wrap:break-all;" id="companyList"
+					class="table table-striped table-bordered table-hover table-condensed text-center"
+					 >
+					<tr>
+						<th width="15%">单位编号</th>
+						<th width="38%">单位名称</th>
+						<th width="15%">添加日期</th>
+						<th width="17%">位置</th>
+						<th width="15%">操作</th>
+					</tr>
+					<tr v-for="company in companyList">
+						<td>{{company.cid}}</td>
+						<td>{{company.cname}}</td>
+						<td>{{company.cdate|forMatDateSimple}}</td>
+						<td>{{company.province +' '+company.city}}    </td>
+						<td>
+							<button class="btn btn-xs btn-primary" v-on:click="showDesc(company.cid)">查看</button>
+							<button class="btn btn-xs btn-success" v-on:click="updateCompany(company.cid)">修改</button>
+							<button class="btn btn-xs btn-danger" v-on:click="deleteCompany(company.cid)">删除</button>
+						</td>
+					</tr>
+				</table>
+				<div id="splitPageDiv" class="text-right" >
+				</div>
+			</div>
+			<script type="text/javascript" th:src="@{/js/city.js}"></script>
+		</div>
+		<!-- 导入公司尾部认证信息及右边工具设置栏 -->
+		<div th:replace="plugins/include_footer_and_right_menu.html"></div>
+		<div class="control-sidebar-bg"></div>
+	</div>
+	<!-- 导入css、js -->
+	<div th:replace="plugins/include_foot_script.html"></div>
+
+</body>
+<script type="text/javascript" th:src="@{/js/split_util.js}"></script>
+<script th:inline="javascript">
+var context = [[@{/}]]; 
+	var app = new Vue({
+		el:".content-wrapper",
+		data:{
+			companyListMessage:"",
+			companyList:[
+			]
+			,queryStatus:true
+		},
+		methods:{
+			query:function(){
+				$("#query").button("loading");
+				app.queryStatus = false;
+				var province = $("#province").val();
+				var city = $("#city").val();
+				var cid = $("#cid").val();
+				var cname = $("#cname").val();
+				
+				if(province == "请选择" ){
+					province =null;
+				}
+				if(city == "请选择"){
+					city =null;
+				}
+				$.get(context+"back/actions/company/list",{
+					province:province
+					,city:city
+					,cid:cid
+					,cname:cname,
+					cp:jsCommonCp,ps:jsCommonPs=8,col:jsCommonCol,kw:jsCommonKw},function(data){
+					app.companyList = data.result.list;
+					createSplitBar(data,"#splitPageDiv",app.query);
+					$("#query").button("reset");
+					app.queryStatus = true;
+					app.companyListMessage = "共查询到"  + data.result.total + "条记录";
+				});
+				//$("#query").bwutton("reset");
+				
+				//alert($("#province").val() +$("#city").val()+$("#cid").val() +$("#cname").val());
+			}
+			,showDesc:function(cid){
+				window.location = context+"back/company/company_show?cid="+ cid ;
+			}
+			,updateCompany:function(cid){
+				window.location = context+"back/company/company_update?cid="+ cid ;
+			}
+			,deleteCompany:function(cid){
+				
+				if(window.confirm("确认删除")){
+					$.get(context+"back/actions/company/delete",{cid:cid},function(data){
+						app.loadList();
+					});
+				}
+			}
+			,loadList:function(){
+				$.get(context+"back/actions/company/list",{cp:jsCommonCp,ps:jsCommonPs=8,col:jsCommonCol,kw:jsCommonKw},function(data){
+					app.companyList = data.result.list;
+					createSplitBar(data,"#splitPageDiv",app.query);
+					app.companyListMessage = "共查询到"  + data.result.total + "条记录";
+					if(jsCommonCp !=1 && data.result.list.length == 0){
+						jsCommonCp --;
+						app.loadList();
+					}
+				});
+			}
+		},filters:{
+			forMatDateSimple:function(date){
+				return new Date(date).format("yyyy-MM-dd");
+			},forMatDateDesc:function(date){
+				return new Date(date).format("yyyy-MM-dd hh:mm:ss");
+			}
+			
+		}
+	});
+	app.loadList();
+</script>
+</html>

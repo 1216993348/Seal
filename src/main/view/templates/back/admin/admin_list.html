@@ -1,0 +1,369 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta charset="UTF-8" />
+<div th:replace="plugins/include_head_script.html"></div>
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+		<!-- 导入头部标题栏内容 -->
+		<div th:replace="plugins/include_body_header.html"></div>
+		<!-- 导入左边菜单项 -->
+		<div th:replace="plugins/include_left_menu.html :: param(5,51)"></div>
+		<div class="content-wrapper text-center">
+			<div class="main">
+				<div class="head" style="padding: 20px;">
+					<div class="row" style="margin:auto;10px;">
+						<div class="col-md-7 form-inline">
+							<input
+								type="text" class="form-control" id="kw" placeholder="ID">
+							<button class="btn btn-primary" v-on:click="search"
+							data-loading-text="正在查询..." id="query">查询</button>
+							<span>共有{{allRecorders}}条信息</span>
+						</div>
+						<div class="col-md-4">
+							<span class="btn btn-primary" v-on:click="managerAdmin"
+								v-show="managerState==0 " style=""> 管理 </span> <span
+								class="btn btn-success" v-on:click="managerAdmin"
+								v-show="managerState==1"> 完成 </span> <span
+								class="btn btn-danger" v-on:click="deleteAdmin"
+								v-show="managerState==1"> 删除 </span> <span
+								class="btn btn-primary" v-on:click="addAdmin"> 添加 </span>
+						</div>
+					</div>
+				</div>
+				<div v-show="queryStatus == 1">
+					<table style="word-break:break-all; word-wrap:break-all;" class="table table-hover table-condensed text-center"  >
+						<thead class="thead">
+							<tr>
+								<th width="8%" v-show="managerState == 1"><label><input
+										type="checkbox" id="checkAll">全选</label></th>
+								<th width="10%">ID</th>
+								<th width="16%">注册日期</th>
+								<th width="16%">修改日期</th>
+								<th width="16%">最后一次登陆日期</th>
+								<th width="8%">用户状态</th>
+								<th width="16%">操作</th>
+							</tr>
+						</thead>
+						<tbody class="tbody" is="transition-group" name="list-complete">
+							<tr v-for="admin in admins" v-bind:key="admin"
+								class="list-complete-item">
+								<td v-if="managerState == 1 && admin.lev != 1"><input
+									type="checkbox" v-on:click="checkBox($event)"
+									v-bind:value="admin.aid" name="d_aid" id="d_aid"></td>
+								<td v-if="managerState == 1 && admin.lev == 1"></td>
+								<td>{{admin.aid}}</td>
+								<td>{{admin.createdate |formatDate}}</td>
+								<td>{{admin.updatedate |formatDate}}</td>
+								<td>{{admin.lastdate |formatDate}}</td>
+								<td><span class="text-success" v-show="admin.state == 1 ">激活</span>
+									<span class="text-danger" v-show="admin.state == 0 ">锁定</span></td>
+								<td>
+									<button class="btn btn-success"
+										v-show="admin.state == 0 && admin.lev == 0" 
+										v-bind:id="admin.aid" v-bind:state="admin.state"
+										v-on:click="updateState(admin.aid,admin.state)">激活</button>
+									<button class="btn btn-danger"
+										v-show="admin.state == 1 && admin.lev == 0"  
+										v-bind:id="admin.aid" v-bind:state="admin.state"
+										v-on:click="updateState(admin.aid,admin.state)">锁定</button>
+									<button class="btn  btn-info" data-toggle="modal"
+										v-on:click="updatePWInfo(admin.aid)">修改密码</button>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="col-md-8" v-show="queryStatus == 1">
+					<div id="splitbarDiv" class="pull-right"></div>
+					<div id="alertDiv"></div>
+					<div class="alert alert-success" id="alertDiv"
+						style="display: none; width: 500px; float: right;">
+						<span id="alertText"></span>
+					</div>
+				</div>
+				<div class="modal fade downmove" id="updatePW" tabindex="-1">
+					<form action="" method="post" id="pwForm" class="form-horizontal">
+						<div class="modal-dialog">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">修改密码</h4>
+								</div>
+								<div class="modal-body">
+									<fieldset>
+										<div class="form-group row" id="newPWDiv">
+											<label class="col-md-3 control-label" for="newPW">新密码：</label>
+											<div class="col-md-6">
+												<input type="password" name="newPW" id="newPW"
+													class="form-control" placeholder="请输入密码">
+											</div>
+											<span id="newPWMsg" class="col-md-3"></span>
+										</div>
+										<div class="form-group row" id="conPWDiv">
+											<label class="col-md-3 control-label" for="conPW">确认密码：</label>
+											<div class="col-md-6">
+												<input type="password" name="conPW" id="conPW"
+													class="form-control" placeholder="请确认密码">
+											</div>
+											<span id="conPWMsg" class="col-md-3"></span>
+										</div>
+									</fieldset>
+								</div>
+								<div class="modal-footer">
+									<button class="btn btn-success" type="submit">修改</button>
+									<button class="btn btn-warning" type="reset">重置</button>
+								</div>
+							</div>
+						</div>
+					</form>
+				</div>
+				<div class="modal fade downmove" id="addAdminInfo" tabindex="-1">
+					<form action="" method="post" id="adminForm"
+						class="form-horizontal">
+						<div class="modal-dialog">
+							<div class="modal-content">
+								<div class="modal-header">
+									<button class="close" data-dismiss="modal">&times;</button>
+									<h4 class="modal-title">添加新管理员</h4>
+								</div>
+								<div class="modal-body">
+									<fieldset>
+										<div class="form-group row" id="aidDiv">
+											<label class="col-md-3 control-label" for="aid">账号：</label>
+											<div class="col-md-5">
+												<input type="text" v-model="admin.aid" class="form-control"
+													name="aid" id="aid" placeholder="账号">
+											</div>
+											<span id="aidMsg" class="col-md-4"></span>
+										</div>
+										<div class="form-group row" id="passwordDiv">
+											<label class="col-md-3 control-label" for="password">密码：</label>
+											<div class="col-md-5">
+												<input type="password" v-model="admin.password"
+													name="password" id="password" class="form-control"
+													placeholder="请输入密码">
+											</div>
+											<span id="passwordMsg" class="col-md-4"></span>
+										</div>
+										<div class="form-group row" id="conPW2Div">
+											<label class="col-md-3 control-label" for="conPW2">确认密码：</label>
+											<div class="col-md-5">
+												<input type="password" name="conPW2" v-model="admin.conf"
+													id="conPW2" class="form-control" placeholder="确认密码">
+											</div>
+											<span id="conPW2Msg" class="col-md-4"></span>
+										</div>
+										<div class="form-group row" id="stateDiv">
+											<label class="col-md-3 control-label" for="state">状态：</label>
+											<div class="col-md-5">
+												<label> 激活<input type="radio" v-model="admin.state"
+													name="state" value="1">
+												</label> <label> 锁定<input type="radio" v-model="admin.state"
+													name="state" value="0">
+												</label>
+											</div>
+											<span id="stateMsg" class="col-md-4"></span>
+										</div>
+									</fieldset>
+								</div>
+								<div class="modal-footer">
+									<button class="btn btn-success" type="submit">增加</button>
+									<button class="btn btn-warning" type="reset">重置</button>
+								</div>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<!-- 导入公司尾部认证信息及右边工具设置栏 -->
+		<div th:replace="plugins/include_footer_and_right_menu.html"></div>
+		<div class="control-sidebar-bg"></div>
+	</div>
+	<!-- 导入css、js -->
+	<div th:replace="plugins/include_foot_script.html"></div>
+	<script type="text/javascript" th:src="@{/js/vue.min.js}"></script>
+	<script type="text/javascript" th:src="@{/js/split_util.js}"></script>
+</body>
+</html>
+<script th:inline="javascript">
+	var context = [[@{/}]];      
+	//$("#merInfo").modal("toggle");
+	var app = new Vue({
+		el:".main",
+		computed:{
+			addrCount:function(){
+				return this.addrs.length;
+			}
+		},
+		data:{
+			admins:[
+			]
+			,managerState:0
+			,currentAdmin:{}
+			,admin:{}
+			,status:0
+			,allRecorders:0
+			,pageCount:0
+			,queryStatus:1
+		}
+		,methods:{
+			updateState:function(id,state){
+				for(var i=0;i<this.admins.length ;i++){
+					if(this.admins[i].aid == id){
+						if(state == 1){
+							this.admins[i].state = 0;
+						}else{
+							this.admins[i].state = 1;
+						}
+						$.post(context+"back/actions/admin/updateStatus",{aid:this.admins[i].aid});
+						break;
+					}
+				}
+			},updatePWInfo:function(aid){
+				for(var i=0;i<this.admins.length ;i++){
+					if(this.admins[i].aid== aid){
+						this.currentAdmin = this.admins[i];
+						
+						break;
+					}
+				}
+				$("#newPW").val("");
+				$("#conPW").val("");
+				$("#updatePW").modal("toggle");
+			}
+			,managerAdmin:function(){
+				if(this.managerState == 0){
+					this.managerState =1;
+				}else{
+					this.managerState = 0;
+				}
+				$("[id='aid']").prop("checked",false);
+				$("#checkAll").prop("checked",false);
+			},updatePW:function(){
+				
+				var aid = this.currentAdmin.aid;
+				var password = $("#newPW").val();
+				$.post(context+"back/actions/admin/updatePW",{
+					aid:aid
+					,password:password
+				},function(data){
+					operateAlert("#alertDiv",data.result,"修改密码成功！","修改密码失败！");
+					$("#updatePW").modal("toggle");
+				},"json");	
+			},deleteAdmin:function(){
+				var ids = updateHandel("确定要删除吗？","","[id='d_aid']");
+				if(ids != undefined){
+					console.log(ids);
+					$.post(context+"back/actions/admin/delete",{ids:ids},function(data){
+						console.log(data);
+						operateAlert("#alertDiv",data.result,"删除成功!","删除管理员失败!");
+						app.loadAdminList();
+					},"json");
+					$("[id='aid']").prop("checked",false);
+				}
+			},addAdmin:function(){
+				this.admin = {adId:"",password:"",name:"",state:1,conf:""}
+				$("#addAdminInfo").modal("toggle");
+			},addAdminHandle:function(){
+				//console.log("id = " +this.admin.aid + " ,name = "+this.admin.name + " ,password = "+this.admin.password+" , state = " +this.admin.state);
+				$.post(context+"back/actions/admin/addAdmin",{
+					aid:this.admin.aid
+					,password:this.admin.password
+					,state:this.admin.state
+					},function(data){
+						operateAlert("#alertDiv",data.state,"添加管理员成功!","添加管理员失败!");
+						if(data.state){
+							app.allRecorders++;
+							app.pageCount = pageCount(app.allRecorders);
+							app.loadAdminList();
+						}
+					},"json");
+				this.admin = {};
+				$("#addAdminInfo").modal("toggle");
+			},checkBox:function(event){
+				checkboxEvent(event.currentTarget.checked,"checkAll","d_aid");
+			},loadAdminList:function(){
+				$.post(context+"back/actions/admin/list",{cp:jsCommonCp,ps:jsCommonPs=8,col:jsCommonCol,kw:jsCommonKw},function(data){
+					app.admins = data.result.list;
+					app.allRecorders=data.result.total;
+					app.pageCount = pageCount(data.allRecorders);
+					createSplitBar(data,"#splitbarDiv",app.loadAdminList);
+					if(app.status == 0){
+						//initCol(data,"#col",true);
+						app.status = 1;
+					}
+					if(jsCommonCp !=1 && data.result.list.length == 0){
+						jsCommonCp --;
+						app.loadAdminList();
+					}
+					app.queryStatus = 1;
+					$("#query").button("reset");
+				});
+				$("#checkAll").prop("checked",false);
+			},search:function(){
+				jsCommonCp = 1;
+				jsCommonCol = $("#col").val();
+				jsCommonKw = $("#kw").val();
+				$("#query").button("loading");
+				app.queryStatus = 0;
+				app.loadAdminList();
+			},toggle:function(event){
+				var obj = event.currentTarget;
+				var aid = obj.id;
+				var state =obj.state;
+				console.log(aid + " , " + state);
+			}
+		},filters: {
+	        formatDate:function(time) { 
+	            var date = new Date(time);
+	            return date.format("yyyy-MM-dd hh:mm:ss");
+	        }
+	    }
+	});
+	validateParam("#pwForm",{
+		"newPW" :{     //针对此name元素进行验证
+            required :true//此字段不能为空
+            ,rangelength: [6,50]//设置范围长度
+        }
+        ,"conPW":{
+            equalTo: newPW,//此字段不能为空
+        }
+	},app.updatePW);
+	checkboxAll("checkAll","d_aid");
+	validateParam("#adminForm",{
+		"aid" :{     //针对此name元素进行验证
+            required :true//此字段不能为空
+            ,rangelength: [3,16]//设置范围长度
+            ,remote : {
+				url : context+"back/actions/admin/checkAid", // 后台处理程序
+				type : "post", // 数据发送方式
+				dataType : "json", // 接受数据格式
+				data : { // 要传递的数据
+					aid : function() {
+						return app.admin.aid;
+					}
+				},
+				dataFilter : function(data, type) {
+					data = eval("("+data+")")
+					return data.result;
+				}
+			}
+
+        }
+		,"name" :{     //针对此name元素进行验证
+			maxlength:20
+        }
+         ,"password":{
+             required :true,//此字段不能为空
+             rangelength: [6,50],//设置范围长度
+        }
+        ,"conPW2":{
+            equalTo: password,//此字段不能为空
+        }
+	},app.addAdminHandle);
+	app.loadAdminList();
+	
+</script>

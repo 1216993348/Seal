@@ -1,0 +1,209 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta charset="UTF-8" />
+<div th:replace="plugins/include_head_script.html"></div>
+<script type="text/javascript" th:src="@{/js/vue.min.js}"></script>
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+		<!-- 导入头部标题栏内容 -->
+		<div th:replace="plugins/include_body_header.html"></div>
+		<!-- 导入左边菜单项 -->
+		<div th:replace="plugins/include_left_menu.html :: param(1,12)"></div>
+		<div class="content-wrapper text-center">
+			<div class="container">
+				<form action="#" method="post" class="form-horizontal"
+					id="companyform">
+					<fieldset>
+						<legend>
+							<label>添加单位</label>
+						</legend>
+						<div class="form-group" id="cidDiv">
+							<label class="col-md-3 control-label" for="cid">单位编号：</label>
+							<div class="col-md-5">
+								<input class="form-control" type="text" placeholder="统一社会信用代码" id="cid" name="cid"
+									>
+							</div>
+							<div class="col-md-2">
+								<span id="cidMsg"></span>
+							</div>
+						</div>
+						<div class="form-group" id="cnameDiv">
+							<label class="col-md-3 control-label" for="cname">单位名称：</label>
+							<div class="col-md-5">
+								<input class="form-control" type="text" id="cname" name="cname"
+									>
+							</div>
+							<div class="col-md-2">
+								<span id="cnameMsg"></span>
+							</div>
+						</div>
+						<div class="form-group" id="leaderDiv">
+							<label class="col-md-3 control-label" for="leader">单位负责人：</label>
+							<div class="col-md-5">
+								<input class="form-control" type="text" id="leader" name="leader"
+									>
+							</div>
+							<div class="col-md-2">
+								<span id="leaderMsg"></span>
+							</div>
+						</div>
+						<div class="form-group" id="phoneDiv">
+							<label class="col-md-3 control-label" for="phone">联系方式：</label>
+							<div class="col-md-5">
+								<input class="form-control" type="text" id="phone" name="phone"
+									>
+							</div>
+							<div class="col-md-2">
+								<span id="phoneMsg"></span>
+							</div>
+						</div>
+						<div class="form-group" id="cityDiv">
+							<label class="col-md-3 control-label" for="pwd">位置：</label>
+							<div class="col-md-5">
+								<table style="margin: auto;">
+								<tr>
+									<td>所属省份：</td>
+									<td style="width: 130px;"><span id="provinceSpan"> <select
+											id="province" name="province" class="form-control"></select>
+									</span></td>
+									<td>&nbsp;&nbsp;所属城市：</td>
+									<td style="width: 150px;"><span id="citySpan"> <select
+											id="city" name="city"class="form-control form-group-sm"></select>
+									</span></td>
+								</tr>
+								</table>
+							</div>
+							<div class="col-md-2">
+								<div id="cityMsg"></div>
+							</div>
+						</div>
+						<div class="form-group" id="cdescDiv">
+							<label class="col-md-3 control-label" for="cdesc">单位描述：</label>
+							<div class="col-md-5">
+								<textarea rows="10" cols="200" class="form-control" name="cdesc" id="cdesc"></textarea>
+							</div>
+							<div class="col-md-2">
+								<span id="cdescMsg"></span>
+							</div>
+						</div>
+						<div class="form-group" id="passwordDiv">
+							<label class="col-md-3 control-label" for="password">印章查询密码：</label>
+							<div class="col-md-5">
+								<input class="form-control" type="password" id="password" name="password"
+									>
+							</div>
+							<div class="col-md-2">
+								<span id="passwordMsg"></span>
+							</div>
+						</div>
+						<div class="form-group" id="confPWDiv">
+							<label class="col-md-3 control-label" for="">确认密码：</label>
+							<div class="col-md-5">
+								<input class="form-control" type="password" id="confPW" name="confPW"
+									>
+							</div>
+							<div class="col-md-2">
+								<span id="confPWMsg"></span>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-md-5 col-md-offset-3">
+								<button type="submit" class="btn btn-primary">提交</button>
+								<button type="reset" class="btn btn-warning">重置</button>
+							</div>
+						</div>
+					</fieldset>
+				</form>
+				<div id="alertDiv"></div>
+			</div>
+			
+		</div>
+		<!-- 导入公司尾部认证信息及右边工具设置栏 -->
+		<div th:replace="plugins/include_footer_and_right_menu.html"></div>
+		<div class="control-sidebar-bg"></div>
+	</div>
+	<!-- 导入css、js -->
+	<div th:replace="plugins/include_foot_script.html"></div>
+</body>
+<script type="text/javascript" th:src="@{/js/util.js}"></script>
+<script type="text/javascript" th:src="@{/js/city.js}"></script>
+<script th:inline="javascript">
+var context = [[@{/}]]; 
+	$(function() {
+		$.validator.addMethod("selectCity",function(value,element,params){  
+		    if(value != "请选择"){
+		        return true;
+		    }
+	        return false;
+		},"请选择城市！");
+		validateParam("#companyform", {
+			"cid" : { //针对此name元素进行验证
+				required : true,//此字段不能为空
+			//rangelength: [3,6],//设置范围长度
+				remote :{
+					url : context+"front/actions/company/checkCid", // 后台处理程序
+					type : "post", // 数据发送方式
+					dataType : "json", // 接受数据格式
+					data : { // 要传递的数据
+						cid : function() {
+							return $("#cid").val();
+						}
+					},
+					dataFilter : function(data, type) {
+						return data;
+					}
+					
+				}
+			},	
+			"cname" : { //针对此name元素进行验证
+				required : true,//此字段不能为空
+			//rangelength: [3,6],//设置范围长度
+			},
+			"city" : {
+				required : true
+				,selectCity :true
+			}
+			,"cdesc" : {
+				required : true
+			}
+			,"leader" : {
+				required : true
+			}
+			,"phone" : {
+				required : true
+			}
+			,"password" : {
+				required : true
+			}
+			,"confPW" : {
+				equalTo: password
+			}
+		}, function() {
+			$.post(context+"back/actions/company/add",{
+				cid:$("#cid").val()
+				,cname:$("#cname").val()
+				,province:$("#province").val()
+				,city:$("#city").val()
+				,cdesc:$("#cdesc").val()
+				,leader:$("#leader").val()
+				,phone:$("#phone").val()
+				,password:$("#password").val()
+			},function(data){
+				if(data.state){
+					alert("添加成功！");
+				}else{
+					alert("添加失败！");
+				}
+				//operateAlert("#alertDiv",data.state,"成功","失败");
+				//重置表单
+				$("#city").text("");
+				$("#companyform")[0].reset();
+			},"json");
+			
+		});
+	});
+</script>
+</html>
+

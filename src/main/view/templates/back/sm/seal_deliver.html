@@ -1,0 +1,272 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta charset="UTF-8" />
+<div th:replace="plugins/include_head_script.html"></div>
+<style type="text/css">
+a:hover {
+	cursor: hand;
+}
+
+.seal-modal-left {
+	width: 35%;
+	height: 35%;
+	float: left;
+}
+
+.seal-modal-photo {
+	height: 90%;
+	width: 90%;
+}
+
+.mer-modal-right {
+	float: right;
+	width: 65%;
+}
+</style>
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+		<!-- 导入头部标题栏内容 -->
+		<div th:replace="plugins/include_body_header.html"></div>
+		<!-- 导入左边菜单项 -->
+		<div th:replace="plugins/include_left_menu.html :: param(4,42)"></div>
+		<div class="content-wrapper text-center">
+			<!-- 此处编写需要显示的页面 -->
+			<table style="margin: auto;">
+				<tr>
+					<td>单位编号：</td>
+					<td style="width: 150px;"><span id="provinceSpan"> <input
+							type="text" class="form-control" name="cid" id="cid"
+							v-model="querySeal.cid">
+					</span></td>
+					<td>&nbsp;&nbsp;单位名称：</td>
+					<td style="width: 150px;"><span id="citySpan"> <input
+							type="text" class="form-control" name="cname" id="cname"
+							v-model="querySeal.cname">
+					</span></td>
+				</tr>
+				<tr>
+					<td>印章编号：</td>
+					<td><input type="text" class="form-control" name="sid"
+						id="sid" v-model="querySeal.sid"></td>
+					<td>&nbsp;&nbsp;印章名称：</td>
+					<td><input type="text" class="form-control" name="sname"
+						id="sname" v-model="querySeal.sname"></td>
+				</tr>
+			</table>
+			<button v-on:click="query" type="button" data-loading-text="正在查询..."
+				class="btn btn-primary" style="margin: 10px; width: 160px;"
+				id="query">
+				<span class="glyphicon glyphicon-search"></span>&nbsp;查询
+			</button>
+
+			<div>{{sealListMessage}}</div>
+			<table style="word-break: break-all; word-wrap: break-all;"
+				v-show="queryStatus == 1 && seals != null && seals.length >0"
+				id="companyList"
+				class="table table-striped table-bordered table-hover table-condensed text-center">
+				<tr>
+					<th style="width: 20%;">印章编号</th>
+					<th style="width: 20%;">单位名称</th>
+					<th style="width: 40%;">印章名称</th>
+					<th style="width: 20%;">交付日期</th>
+				</tr>
+				<tr v-for="seal in seals">
+					<td>{{seal.sid}}</td>
+					<td><a v-on:click="showCompany(seal.cid)">{{seal.cname}}</a></td>
+					<td><a v-on:click="showSeal(seal.sid)">{{seal.sname}}</a></td>
+					<td>{{seal.smdate|forMatDateDesc}}</td>
+				</tr>
+			</table>
+			<div id="splitPageDiv" class="text-right" v-show="seals.length >0"></div>
+			<div id="alertDiv"></div>
+		</div>
+		<!-- 导入公司尾部认证信息及右边工具设置栏 -->
+		<div th:replace="plugins/include_footer_and_right_menu.html"></div>
+		<div class="control-sidebar-bg"></div>
+	</div>
+	<!-- 导入css、js -->
+	<div th:replace="plugins/include_foot_script.html"></div>
+	<div class="modal fade" id="sealInfo" tabindex="-1">
+		<div class="modal-dialog" style="width: 50%">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button class="close" type="button" data-dismiss="modal"
+						aria-hidden="true">&times;</button>
+					<h3 class="modal-title">
+						<span class="glyphicon glyphicon-eye-open"></span> <strong>
+							<span>{{modalSeal.sname}}</span>
+						</strong>
+					</h3>
+				</div>
+				<div class="modal-body">
+					<div class="panel-body">
+						<div class="seal-modal-left">
+							<img v-if="modalSeal.photo != undefined"
+								v-bind:src="modalSeal.photo" class="seal-modal-photo" />
+						</div>
+						<div class="seal-modal-right col-md-7">
+							<table class="table">
+								<tr>
+									<td width="30%">印章编号:</td>
+									<td>{{modalSeal.sid}}</td>
+								</tr>
+								<tr>
+									<td>印章名称:</td>
+									<td>{{modalSeal.sname}}</td>
+								</tr>
+								<tr>
+									<td>添加日期:</td>
+									<td>{{modalSeal.sdate|forMatDateDesc}}</td>
+								</tr>
+								<tr>
+									<td >状态</td>
+									<td v-if="modalSeal.status == 0" class="text-muted">审核中</td>
+									<td v-if="modalSeal.status == 1" class="text-info">审核通过,<br />待交付
+									</td>
+									<td v-if="modalSeal.status == 2" class="text-warning">审核未通过</td>
+									<td v-if="modalSeal.status == 3" class="text-danger">已注销</td>
+									<td v-if="modalSeal.status == 4" class="text-warning">申请注销中</td>
+									<td v-if="modalSeal.status == 5" class="text-success">已交付</td>
+								</tr>
+							</table>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer"></div>
+			</div>
+		</div>
+	</div>
+	<div class="modal fade" id="companyInfo" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button class="close" data-dismiss="modal">&times;</button>
+					<h4 class="modal-title">单位信息</h4>
+				</div>
+				<div class="modal-body">
+					<table class="table table-striped table-bordered table-condensed"
+						style="margin: auto; width: 80%; border: 1px solid red; table-layout: fixed; word-break: break-all;">
+						<tr>
+							<td width="20%">单位编号</td>
+							<td width="80%">{{company.cid}}</td>
+						</tr>
+						<tr>
+							<td>单位地址</td>
+							<td>{{company.province}} {{company.city}}</td>
+						</tr>
+						<tr>
+							<td>负责人</td>
+							<td>{{company.leader}}</td>
+						</tr>
+						<tr>
+							<td>联系方式</td>
+							<td>{{company.phone}}</td>
+						</tr>
+						<tr>
+							<td width="20%">单位描述</td>
+							<td width="80%">
+								<p>{{company.cdesc}}</p>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div class="modal-footer"></div>
+			</div>
+		</div>
+	</div>
+
+</body>
+<script type="text/javascript" th:src="@{/js/vue.min.js}"></script>
+<script type="text/javascript" th:src="@{/js/split_util.js}"></script>
+<script th:inline="javascript">
+var context = [[@{/}]]; 
+	var companyInfoVue =new Vue({
+		el:"#companyInfo"
+		,data:{
+			company:{}
+		}
+	});
+	var app = new Vue({
+		el:".content-wrapper",
+		data:{
+			sealListMessage:""
+			,querySeal:{cid:null,cname:null,sid:null,sname:null}
+			,queryStatus:1
+			,seals:[
+				
+			]
+		},filters:{
+			forMatDateSimple:function(date){
+				return new Date(date).format("yyyy-MM-dd");
+			},forMatDateDesc:function(date){
+				return new Date(date).format("yyyy-MM-dd hh:mm:ss");
+			}
+		},
+		methods:{
+			query:function(){
+				this.queryStatus = 0;
+				$("#query").button("loading");
+				this.querySeal['cp']= jsCommonCp;
+				this.querySeal['ps']= jsCommonPs=8;
+				$.post(context+"back/actions/seal/deliver",this.querySeal,function(data){
+					app.seals = data.result.list;
+					app.sealListMessage="共查询到"  + data.result.total+"条记录";
+					createSplitBar(data,"#splitPageDiv",app.loadList);
+					$("#query").button("reset");
+					app.queryStatus = 1;
+					
+					for(var i = 0 ; i< app.seals.length;i++){
+						app.seals[i].photo = context + "upload/seal/" +  app.seals[i].photo;
+						app.seals[i]["curl"] = context + "back/company/company_show?cid="+app.seals[i].cid;
+					}
+				});
+				//
+				//alert($("#province").val() +$("#city").val()+$("#cid").val() +$("#cname").val());
+			},showSeal:function(sid){
+				for(var i = 0 ; i <this.seals.length; i++){
+					if(this.seals[i].sid == sid){
+						sealModal.modalSeal = this.seals[i];break;
+					}
+				}
+				$("#sealInfo").modal("toggle");
+			},showCompany:function(cid){
+					$.post(context+"back/actions/company/show",{cid:cid},function(data){
+						companyInfoVue.company=data.result.company;
+						$("#companyInfo").modal("toggle");
+					});
+			},loadList:function(){
+				this.querySeal['cp']= jsCommonCp;
+				this.querySeal['ps']= jsCommonPs=8;
+				$.post(context+"back/actions/seal/deliver",this.querySeal,function(data){
+					app.seals = data.result.list;
+					app.sealListMessage="共查询到"  + data.result.total+"条记录";
+					for(var i = 0 ; i< app.seals.length;i++){
+						app.seals[i].photo = context + "upload/seal/" +  app.seals[i].photo;
+						app.seals[i]["curl"] = context + "back/company/company_show?cid="+app.seals[i].cid;
+					}
+					createSplitBar(data,"#splitPageDiv",app.loadList);
+				});
+			}
+		}
+		
+	});
+	app.loadList();
+	var sealModal = new Vue({
+		el:"#sealInfo",
+		data:{
+			modalSeal:{sid:"321321321",cid:"111112",sname:"西安全真软件科技有限公司/[空]/五角星"
+				,cname:"西安全真软件科技有限公司",sdate:1546227030476}
+		},filters:{
+			forMatDateSimple:function(date){
+				return new Date(date).format("yyyy-MM-dd");
+			},forMatDateDesc:function(date){
+				return new Date(date).format("yyyy-MM-dd hh:mm:ss");
+			}
+		}
+	});
+</script>
+<!-- 印章信息模态窗口 -->
+
+</html>

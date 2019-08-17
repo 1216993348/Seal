@@ -1,0 +1,52 @@
+body {
+	margin: 0px;
+	padding: 0px;
+}
+
+.top {
+	margin: auto;
+	width: 80%;
+	background-image: url(../img/top1.jpg);width:80%; background-repeat: no-repeat;background-size: cover;height:30%;
+}
+
+.menu ul {
+	width: 80%;
+	background-image: url(../img/img01.png);
+	background-size: cover; background-repeat : no-repeat;
+	margin: auto;
+	background-repeat: no-repeat;
+}
+.menu li{
+	width: 15%;
+	line-height: 2.4;
+}
+.menu li, .menu a {
+	display: inline-block;
+	padding-left: 15px;
+	padding-right: 15px;
+	color: #FFFFFF;
+	font-size: 14;
+}
+
+.menu li:hover {
+	background: #00BFFF;
+	cursor: pointer;
+}
+
+.content {
+	margin: auto;
+	width: 80%;
+	height: 600px;
+}
+
+
+.myleft {
+	width:30%;
+	float: left;
+}
+
+.myright {
+	width:66%;
+	float: right;
+	position: relative;
+}

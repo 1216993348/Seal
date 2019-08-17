@@ -1,0 +1,555 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta charset="UTF-8" />
+<div th:replace="plugins/include_head_script.html"></div>
+<link type="text/css" th:href="@{/lib/upload/ssi-uploader.min.css}"
+	rel="stylesheet">
+
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+	<div class="wrapper">
+		<!-- 导入头部标题栏内容 -->
+		<div th:replace="plugins/include_body_header.html"></div>
+		<!-- 导入左边菜单项 -->
+		<div th:replace="plugins/include_left_menu.html :: param(2,22)"></div>
+		<div class="content-wrapper text-center">
+			<legend>
+				<label>&nbsp;添加印章</label>
+			</legend>
+			<div class="col-md-8">
+				<form action="#" method="post" class="form-horizontal" id="sealForm">
+					<fieldset>
+						<div id="snameDiv">
+							<div class="form-group">
+								<label class="col-md-3 control-label" for="sname">印章名称：</label>
+								<div class="col-md-5">
+									<input class="form-control" type="text" id="sname" name="sname"
+										placeholder="印章名称">
+								</div>
+								<div class="col-md-3">
+									<span id="snameMsg"></span>
+								</div>
+							</div>
+							<div class="form-group" id="cnameDiv">
+								<label class="col-md-3 control-label" for="cname">所属单位：</label>
+								<div class="col-md-5">
+									<input class="form-control" disabled="disabled" type="text"
+										id="cname" name="cname" placeholder="">
+								</div>
+								<div class="col-md-2">
+									<button class="btn btn-primary" type="button"
+										v-on:click="queryCompany">选择单位</button>
+								</div>
+								<div class="col-md-3">
+									<span id="cnameMsg"></span>
+								</div>
+							</div>
+							<div class="form-group" id="smidDiv">
+								<label class="col-md-3 control-label" for="smid">印章制作承接单位：</label>
+								<div class="col-md-5">
+									<input class="form-control" disabled="disabled" type="text"
+										id="smid" name="smid" placeholder="">
+									<input class="form-control" disabled="disabled" type="hidden"
+										id="smidh" name="smidh" placeholder="">
+								</div>
+								<div class="col-md-2">
+									<button class="btn btn-primary" type="button"
+										v-on:click="querySealMaker">选择单位</button>
+								</div>
+								<div class="col-md-3">
+									<span id="smidMsg"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-md-3 control-label" for="sname">印章图片：</label>
+								<div class="col-md-5">
+									<div id="sealPhotoDiv">
+										<input type="file" multiple id="sealPhoto" name="sealPhoto"
+											v-show="false" />
+									</div>
+									<button class="btn btn-primary " type="button"
+										v-if="addMethodStatus==0" v-on:click="addMethod"
+										style="margin-top: 10px;">选择</button>
+									<button class="btn btn-success" type="button"
+										style="margin-top: 10px;" v-if="addMethodStatus==1"
+										v-on:click="uploadFile">上传</button>
+									<button class="btn btn-danger" type="button"
+										style="margin-top: 10px;"
+										v-if="addMethodStatus==1 || addMethodStatus == 2 || addMethodStatus == 4"
+										v-on:click="createSealPhoto">在线生成</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="form-group">
+							<div class="col-md-5 col-md-offset-3"
+								style="margin-left: 150px; margin-top: 50px;">
+								<button type="submit" class="btn btn-primary"
+									data-loading-text="添加中..." id="addSealBtn">添加</button>
+								<button type="reset" class="btn btn-warning" v-on:click="reset">重置</button>
+							</div>
+						</div>
+					</fieldset>
+				</form>
+				<div id="alertDiv"></div>
+			</div>
+			<div class="col-md-4">
+				<div id="sPhotoDiv"
+					style="border: 1px solid #adadad; width: 300px; height: 300px; position: relative; right: 100px;"></div>
+			</div>
+		</div>
+		<!-- 导入公司尾部认证信息及右边工具设置栏 -->
+		<div th:replace="plugins/include_footer_and_right_menu.html"></div>
+		<div class="control-sidebar-bg"></div>
+	</div>
+	<!-- 导入css、js -->
+	<div th:replace="plugins/include_foot_script.html"></div>
+	<script type="text/javascript" th:src="@{/js/vue.min.js}"></script>
+	<div class="modal fade" id="queryCompanyInfo" tabindex="-1">
+		<div class="modal-dialog" style="width: 75%">
+			<div class="modal-content">
+				<div class="modal-header">
+					<table style="margin: auto; 10px;">
+						<tr>
+							<td>所属省份：</td>
+							<td style="width: 150px;"><span id="provinceSpan"> <select
+									id="province" class="form-control"></select>
+							</span></td>
+							<td>&nbsp;&nbsp;所属城市：</td>
+							<td style="width: 150px;"><span id="citySpan"> <select
+									id="city" class="form-control form-group-sm"></select>
+							</span></td>
+						</tr>
+						<tr>
+							<td>单位编号：</td>
+							<td><input type="text" class="form-control" name="cid"
+								id="cid"></td>
+							<td>&nbsp;&nbsp;单位名称：</td>
+							<td><input type="text" class="form-control" name="qcname"
+								id="qcname"></td>
+						</tr>
+					</table>
+					<div style="margin: auto; width: 160px;">
+						<button v-on:click="queryAction" type="button"
+							data-loading-text="正在查询..." class="btn btn-primary"
+							style="margin: 10px; width: 160px;" id="query">
+							<span class="glyphicon glyphicon-search"></span>&nbsp;查询
+						</button>
+					</div>
+
+				</div>
+
+				<div v-show="queryStatus == 1">
+					<table style="word-break: break-all; word-wrap: break-all;"
+						v-show="companyList != null && companyList.length >0"
+						id="companyList"
+						class="table table-striped table-bordered table-hover table-condensed text-center">
+						<tr>
+							<th width="15%">单位编号</th>
+							<th width="40%">单位名称</th>
+							<th width="15%">添加日期</th>
+							<th width="15%">位置</th>
+							<th width="15%"></th>
+						</tr>
+						<tr v-for="company in companyList">
+							<td>{{company.cid}}</td>
+							<td>{{company.cname}}</td>
+							<td>{{company.cdate}}</td>
+							<td>{{company.province + company.city}}</td>
+							<td>
+								<button class="btn btn-xs btn-primary"
+									v-on:click="select(company.cid,company.cname)">选择</button>
+							</td>
+						</tr>
+					</table>
+					<div id="splitPageDiv" class="text-right">
+						<ul class="pagination pagination-sm" id="pagecontrol">
+							<li class="active"><a href="#">1</a></li>
+							<li><a href="#" id="e">2</a></li>
+							<li><a href="#">3</a></li>
+							<li><a href="#">4</a></li>
+							<li><a href="#">5</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal fade" id="querySealMaker" tabindex="-1">
+		<div class="modal-dialog" style="width: 75%">
+			<div class="modal-content">
+				<div class="modal-header">
+					<div class="row" style="margin: auto;10px;">
+						<table style="margin: auto;">
+							<tr>
+								<td>ID：</td>
+								<td><input type="text" class="form-control" name="qsmid"
+									id="qsmid"></td>
+								<td>&nbsp;&nbsp;单位名称：</td>
+								<td><input type="text" class="form-control" name="qsmname"
+									id="qsmname"></td>
+							</tr>
+						</table>
+
+						<div style="width: 200px; margin: auto;">
+							<button v-on:click="query" type="button"
+								data-loading-text="正在查询..." class="btn btn-primary"
+								style="margin: 10px; width: 160px;" id="query">
+								<span class="glyphicon glyphicon-search"></span>&nbsp;查询
+							</button>
+							<div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;共有{{allRecorders}}条信息</div>
+						</div>
+					</div>
+
+				</div>
+				<div v-show="queryStatus == 1">
+					<table style="word-break: break-all; word-wrap: break-all;"
+						class="table table-striped table-bordered table-hover table-condensed text-center">
+						<tr>
+							<th width="10%">ID</th>
+							<th width="16%">单位名称</th>
+							<th width="16%">联系方式</th>
+							<th width="16%">操作</th>
+						</tr>
+						<tr v-for="admin in admins" v-bind:key="admin"
+							class="list-complete-item">
+							<td>{{admin.aid}}</td>
+							<td>{{admin.smname}}</td>
+							<td>{{admin.smphone}}</td>
+							<td>
+								<button class="btn btn-primary btn-xs" v-on:click="select(admin.aid,admin.smname)">选择</button>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div class="modal-footer" v-show="queryStatus == 1">
+					<div id="splitbarDiv" class="pull-right">a</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal fade" id="createSealInfo" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button class="close" type="button" data-dismiss="modal"
+						aria-hidden="true">&times;</button>
+					<h1>选择模板</h1>
+					<div class="container">
+						<div class="row">
+							<div class="col-md-2">
+								<div id="sealMenu" class="carousel slide" style="width: 160px;">
+									<ol class="carousel-indicators">
+									</ol>
+									<div class="carousel-inner">
+										<div v-bind:class="s.index == 0?'item active':'item'"
+											v-for="s in sealTemplates">
+											<div class="carousel-caption">模板{{s.index}}</div>
+											<img v-bind:src="s.name" width="150px;">
+										</div>
+									</div>
+									<a href="#sealMenu" class="carousel-control left"
+										data-slide="prev">&lsaquo;</a> <a href="#sealMenu"
+										class="carousel-control right" data-slide="next">&rsaquo;</a>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<form action="" id="sealInfo">
+									<table class="table">
+										<tr>
+											<td class="text-right" width="30%"><label
+												for="mainTitle">主文字：</label></td>
+											<td><input type="text" size="25" id="mainTitle"
+												name="mainTitle" /></td>
+										</tr>
+										<tr v-show="tIndex== 1||tIndex== 5||tIndex== 6 ">
+											<td class="text-right"><label for="viceTitle">副文字：</label></td>
+											<td><input type="text" size="25" id="viceTitle"
+												name="viceTitle" /></td>
+										</tr>
+										<tr v-show="tIndex== 3||tIndex== 4 ||tIndex== 5||tIndex== 6">
+											<td class="text-right"><label for="centerTitle">中心文字：</label></td>
+											<td><input type="text" size="25" id="centerTitle"
+												name="centerTitle" /></td>
+										</tr>
+										<tr v-show="tIndex== 2 || tIndex== 4">
+											<td class="text-right"><label for="topTitle">抬头文字：</label></td>
+											<td><input type="text" size="25" id="topTitle"
+												name="topTitle" /></td>
+										</tr>
+									</table>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-primary" data-loading-text="正在生成中..."
+						id="buildSealBtn" v-on:click="buildSeal">生成印章</button>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+<script type="text/javascript" th:src="@{/js/util.js}"></script>
+<script type="text/javascript" th:src="@{/js/split_util.js}"></script>
+<script type="text/javascript" th:src="@{/js/city.js}"></script>
+<script type="text/javascript" th:src="@{/lib/upload/ssi-uploader.js}"></script>
+<script th:inline="javascript">
+var context = [[@{/}]]; 
+	$(function() {
+		$.validator.addMethod("selectCompany",
+				function(value, element, params) {
+					if ($("#cname").val() != undefined
+							&& $("#cname").val() != "" 
+							&&$("#smid").val() != undefined
+							&&$("#smid").val() != "" ) {
+						return true;
+					}
+					return false;
+				}, function() {
+					
+					return "请选择单位信息";
+				});
+		$.validator.addMethod("photoNotNull",
+				function(value, element, params) {
+					if(document.getElementById("sealImg")  == null){
+						return false;
+					}else{
+						return true;
+					}
+					
+				}, function() {
+					return "图片不能为空";
+				});
+		validateParam("#sealForm", {
+			"sname" : { //针对此name元素进行验证
+				required : true//此字段不能为空
+				//rangelength: [3,6],//设置范围长度
+				,selectCompany : true
+				,photoNotNull : true
+			}
+		}, function() {
+			$("#addSealBtn").button("loading");
+			$.post(context+"back/actions/seal/add",{
+				sname:$("#sname").val()
+				,cid:companyListVue.cid
+				,photo:app.fileName
+				,smid:$("#smidh").val()
+			},function(data){
+				$("#addSealBtn").button("reset");
+				document.getElementById("sealForm").reset();
+				$("#sealImg").remove();
+				$(".ssi-uploader").remove();
+				$("#sealPhoto").remove();
+				app.addMethodStatus = 0;
+				operateAlert("#alertDiv", true, "添加成功！", "添加失败！");
+			});
+			
+		});
+	});
+	var app = new Vue({
+		el : ".content-wrapper",
+		data:{
+			addMethodStatus:0
+			,fileName:""
+		},
+		methods: {
+			queryCompany : function() {
+				jsCommonCp = 1;
+				companyListVue.initCompanyList();//初始化列表
+				$("#queryCompanyInfo").modal("toggle");
+			},querySealMaker:function(){
+				$("#querySealMaker").modal("toggle");
+				querySMVue.loadSMList();
+			},addMethod:function(){
+				app.addMethodStatus = 1;
+			}
+			,uploadFile:function(){
+				//$(".ssi-uploader").show();
+				app.addMethodStatus = 2;
+				$("#sealPhotoDiv").html('<input type="file" data-validate="required:" multiple id="sealPhoto" name="sealPhoto" v-show="false" />');
+				$("#sealPhoto").ssi_uploader({
+					url:context+'back/actions/seal/uploadPhoto' 
+					,preview:false
+					,locale:"gr"
+					,maxNumberOfFiles:1
+					,allowed:['jpg','gif','txt','png','pdf']
+					,onUpload:function(data){
+						app.fileName = data.result;
+						$("#sPhotoDiv").html("<img src='"+context+"temp/seal/"+data.result+"' id='sealImg' style='width: 300px; height: 300px;' />")		
+						$("#sealForm").valid();
+					}
+				});
+				
+			}
+			,createSealPhoto:function(){
+				app.addMethodStatus = 0;
+				$(".ssi-uploader").remove();
+				$("#sealPhoto").remove();
+				$("#createSealInfo").modal("toggle");
+			}
+			,reset:function(){
+				$("#sealImg").remove();
+			}
+		}
+	});
+	var querySMVue = new Vue({
+		el:"#querySealMaker"
+		,data:{
+			allRecorders:0
+			,queryStatus:0
+			,admins :[]
+			,admin:{}
+		},methods:{
+			loadSMList:function(){
+				$.post(context +"back/actions/admin/findSMSplitPage",{
+					aid:this.admin.aid
+					,smname:this.admin.smname
+					,cp:jsCommonCp,ps:jsCommonPs
+				},function(data){
+					$("#query").button("reset");
+					querySMVue.queryStatus =1;
+					querySMVue.admins = data.result.list;
+					createSplitBar(data,"#splitbarDiv",querySMVue.loadSMList);
+					querySMVue.allRecorders = data.result.total;
+					if(data.result.list.length ==0&& jsCommonCp >1){
+						querySMVue.loadSMList();
+					}
+				});
+			},query:function(){
+				this.queryStatus =0;
+				jsCommonCp=1;
+				$("#query").button("loading");
+				this.admin.aid = $("#qsmid").val()
+				this.admin.smname = $("#qsmname").val();
+				this.loadSMList();
+			},select:function(aid,smname){
+				$("#smid").val(smname);
+				$("#smidh").val(aid);
+				$("#querySealMaker").modal("toggle");
+				$("#sealForm").valid();
+			}
+		}
+		
+	});
+	var companyListVue = new Vue({
+		el : "#queryCompanyInfo",
+		data : {
+			companyList : [ ]
+			,queryStatus:1
+			,cid:""
+			,province:""
+			,city:""
+			,cid:""
+			,cname:""
+		},methods : {
+			queryAction:function(){
+				jsCommonCp=1;
+				companyListVue.province = $("#province").val();
+				companyListVue.city = $("#city").val();
+				companyListVue.cid = $("#cid").val();
+				companyListVue.cname = $("#qcname").val();
+				this.query();
+			},
+			query : function() {
+				$("#query").button("loading");
+				this.queryStatus=0;
+				app.queryStatus = false;
+				
+				if(companyListVue.province == "请选择" ){
+					companyListVue.province =null;
+				}
+				if(companyListVue.city == "请选择"){
+					companyListVue.city =null;
+				}
+				$.get(context+"back/actions/company/list",{
+					province:companyListVue.province
+					,city:companyListVue.city
+					,cid:companyListVue.cid
+					,cname:companyListVue.cname,
+					cp:jsCommonCp,ps:jsCommonPs=8,col:jsCommonCol,kw:jsCommonKw},function(data){
+					companyListVue.companyList = data.result.list;
+					createSplitBar(data,"#splitPageDiv",companyListVue.query);
+					$("#query").button("reset");
+					companyListVue.queryStatus = true;
+				});
+				//this.queryStatus=1;
+				//$("#query").button("reset");
+				
+				//$("#queryCompanyInfo").modal("toggle");
+			}
+			,select:function(cid,cname){
+				this.cid = cid;
+				$("#cname").val(cname);
+				$("#queryCompanyInfo").modal("toggle");
+				$("#sealForm").valid();
+			}
+			,initCompanyList(){
+				this.queryStatus=1;
+				$.get(context+"back/actions/company/list",{cp:1,ps:jsCommonPs=8,col:jsCommonCol,kw:jsCommonKw},function(data){
+					companyListVue.companyList = data.result.list;
+					createSplitBar(data,"#splitPageDiv",companyListVue.query);
+					if(jsCommonCp !=1 && data.result.list.length == 0){
+						jsCommonCp --;
+						app.loadList();
+					}
+				});
+			}
+		}
+	});
+	
+	
+	var createSealInfo = new Vue({
+		el:"#createSealInfo"
+		,data:{
+			sealTemplates:[
+				{index:0,name:context+"img/seal/seal-0.png"}
+				,{index:1,name:context+"img/seal/seal-1.png"}
+				,{index:2,name:context+"img/seal/seal-2.png"}
+				,{index:3,name:context+"img/seal/seal-3.png"}
+				,{index:4,name:context+"img/seal/seal-4.png"}
+				,{index:5,name:context+"img/seal/seal-5.png"}
+				,{index:6,name:context+"img/seal/seal-6.png"}
+			]
+			,tIndex:0
+		}
+		,methods:{
+			buildSeal:function(){
+				$("#buildSealBtn").button("loading");
+				var mainTitle = $("#mainTitle").val();
+				var viceTitle = $("#viceTitle").val();
+				var centerTitle = $("#centerTitle").val();
+				var topTitle = $("#topTitle").val();
+				/* console.log("正在生成" +createSealInfo.tIndex + " , 号模板");
+				console.log("mainTitle：" +mainTitle);
+				console.log("viceTitle：" +viceTitle);
+				console.log("centerTitle:" +centerTitle);
+				console.log("topTitle:" +topTitle); */
+				$.post(context+"back/actions/seal/createPhoto",{
+					mainTitle:mainTitle
+					,viceTitle:viceTitle
+					,centerTitle:centerTitle
+					,topTitle:topTitle
+					,version:createSealInfo.tIndex
+				},function(data){
+					app.fileName = data.result;
+					$("#sPhotoDiv").html("<img src='"+context+"temp/seal/"+data.result+"' id='sealImg' />")		
+					$("#buildSealBtn").button("reset");
+					$("#createSealInfo").modal("toggle");
+					$("#sealForm").valid();
+				});
+			}
+		}
+	});
+	$("#sealMenu").carousel("pause");
+	$("#sealMenu").on("slid.bs.carousel",function(){
+		var src = $("[class='item active']").find("img").attr("src");
+		createSealInfo.tIndex= src.substring(src.indexOf('-')+1,src.indexOf('.'));
+		$("#viceTitle").val("");
+		$("#centerTitle").val("");
+		$("#topTitle").val("");
+	});
+</script>
+</html>

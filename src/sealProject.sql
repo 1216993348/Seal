@@ -1,0 +1,55 @@
+DROP DATABASE IF EXISTS  sealdb;
+CREATE DATABASE sealdb;
+use sealdb;
+-- 删除表
+DROP TABLE IF EXISTS  seal;
+DROP TABLE IF EXISTS  admin;
+DROP TABLE IF EXISTS company;
+-- 1、后台管理管理员表.
+CREATE TABLE admin(
+	aid VARCHAR(20)
+	,password VARCHAR(32)
+	,lev int
+	,state int
+	,smname VARCHAR(20)
+	,smphone VARCHAR(20)
+	,smdesc VARCHAR(999)
+	,lastdate TIMESTAMP  DEFAULT CURRENT_TIMESTAMP
+	,createdate TIMESTAMP  DEFAULT CURRENT_TIMESTAMP
+	,updatedate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	,CONSTRAINT pk_aid PRIMARY KEY(aid)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- 2、企业单位表
+CREATE TABLE company(
+	cid VARCHAR(50)
+	,cname VARCHAR(50)
+	,cdesc VARCHAR(1000)
+	,phone VARCHAR(20)
+	,leader VARCHAR(20)
+	,province VARCHAR(20)
+	,city VARCHAR(20)
+	,cdate TIMESTAMP
+	,password VARCHAR(32)
+	,status int
+	,CONSTRAINT pk_cid PRIMARY KEY(cid)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- 3、印章表
+CREATE TABLE seal(
+	sid int	AUTO_INCREMENT
+	,cid VARCHAR(50)
+	,aid VARCHAR(20)
+	,sname VARCHAR(100)
+	,photo VARCHAR(100)
+	,sdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	,smdate TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	,status int 
+	,smid VARCHAR(20)
+	,CONSTRAINT pk_sid PRIMARY KEY(sid)
+	,CONSTRAINT fk_cid FOREIGN KEY(cid) REFERENCES company(cid) ON DELETE CASCADE 
+	,CONSTRAINT fk_aid FOREIGN KEY(aid) REFERENCES admin(aid) ON DELETE SET NULL
+	,CONSTRAINT fk_smid FOREIGN KEY(smid) REFERENCES admin(aid) ON DELETE SET NULL
+
+)ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+INSERT INTO admin(aid,password,createdate,lev,state) VALUES('admin','67D369C8F6F7DEE0CF15627B46207351',now(),1,1);

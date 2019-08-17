@@ -1,0 +1,149 @@
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+<aside class="main-sidebar" th:fragment="param(mi,msi)">
+	<!-- sidebar: style can be found in sidebar.less -->
+	<section class="sidebar" v-cloak>
+		<!-- Sidebar user panel -->
+		<div class="user-panel">
+			<div class="pull-left image">
+				<img th:src="@{/img/seal_login_bg.png}" class="img-circle"
+					alt="User Image" />
+			</div>
+			<div class="pull-left info">
+				<p></p>
+			</div>
+		</div>
+		<!-- /.search form -->
+		<!-- sidebar menu: : style can be found in sidebar.less -->
+		<ul class="sidebar-menu">
+			<li class="header"><i class="fa fa-university"></i> 印章管理系统</li>
+
+			<li th:if="${session.admin.lev == 1 || session.admin.lev == 0}"
+				th:class="'treeview ' + ${mi==1 ? 'active' : ''}"><a href="#">
+					<i class="fa fa-location-arrow"></i> <span>单位审核管理&nbsp;&nbsp;<span
+						style="position: relative; top: -3px;" class="badge bg-primary"
+						v-if="auditConpanyCount !=0">{{auditConpanyCount}}</span></span> <i
+					class="fa fa-angle-left pull-right"></i>
+			</a>
+				<ul class="treeview-menu">
+					<li th:class="${msi==11 ? 'active' : ''}"><a
+						th:href="@{/back/company/company_list}"><i class="fa fa-train"></i>
+							单位查询</a></li>
+					<li th:class="${msi==12 ? 'active' : ''}"><a
+						th:href="@{/back/company/company_add}"><i
+							class="fa fa-plus-square-o"></i> 单位添加</a></li>
+					<li th:class="${msi==13 ? 'active' : ''}"><a
+						th:href="@{/back/company/company_inaudit_list}"><i
+							class="fa fa-plus-square-o"></i> 待审核单位&nbsp;&nbsp;<span
+							style="position: relative; top: -3px;" class="badge bg-primary"
+							v-if="auditConpanyCount !=0">{{auditConpanyCount}}</span></a></li>
+				</ul></li>
+			<li th:if="${session.admin.lev == 1 || session.admin.lev == 0}"
+				th:class="'treeview ' + ${mi==2 ? 'active' : ''}"><a href="#">
+					<i class="fa fa-sitemap"></i> <span>印章管理&nbsp;&nbsp;<span
+						style="position: relative; top: -3px;" class="badge bg-primary"
+						v-if="auditSealCount !=0">{{auditSealCount}}</span></span> <i
+					class="fa fa-angle-left pull-right"></i>
+			</a>
+				<ul class="treeview-menu">
+					<li th:class="${msi==21 ? 'active' : ''}"><a
+						th:href="@{/back/seal/seal_list}"><i
+							class="fa fa-object-group"></i> 印章查询</a></li>
+					<li th:class="${msi==22 ? 'active' : ''}"><a
+						th:href="@{/back/seal/seal_add}"><i class="fa fa-plus-square"></i>
+							印章添加</a></li>
+					<li th:class="${msi==23 ? 'active' : ''}"><a
+						th:href="@{/back/seal/seal_audit_list}"><i
+							class="fa fa-plus-square"></i> 待审核印章&nbsp;&nbsp;<span
+							style="position: relative; top: -3px;" class="badge bg-primary"
+							v-if="auditSealCount !=0">{{auditSealCount}}</span></a></li>
+				</ul></li>
+			<li th:if="${session.admin.lev == 1 || session.admin.lev == 0}"
+				th:class="'treeview ' + ${mi==3 ? 'active' : ''}"><a href="#">
+					<i class="fa fa-sitemap"></i> <span>印章制作单位&nbsp;&nbsp;</span> <i
+					class="fa fa-angle-left pull-right"></i>
+			</a>
+				<ul class="treeview-menu">
+					<li th:class="${msi==31 ? 'active' : ''}"><a
+						th:href="@{/back/sm/seal_maker_add}"><i
+							class="fa fa-object-group"></i> 添加印章制作单位</a></li>
+					<li th:class="${msi==32 ? 'active' : ''}"><a
+						th:href="@{/back/sm/seal_maker_list}"><i
+							class="fa fa-plus-square"></i> 印章单位列表&nbsp;&nbsp;</a></li>
+				</ul></li>
+			<li th:if="${session.admin.lev == 2}"
+				th:class="'treeview ' + ${mi==4 ? 'active' : ''}"><a href="#">
+					<i class="fa fa-sitemap"></i> <span>印章交付管理&nbsp;&nbsp;<span
+						style="position: relative; top: -3px;" class="badge bg-primary"
+						v-if="sealDeliverCount !=0">{{sealDeliverCount}}</span></span> <i
+					class="fa fa-angle-left pull-right"></i>
+			</a>
+				<ul class="treeview-menu">
+					<li th:class="${msi==41 ? 'active' : ''}"><a
+						th:href="@{/back/sm/seal_undeliver}"><i
+							class="fa fa-object-group"></i> 待交付印章&nbsp;&nbsp;<span
+						style="position: relative; top: -3px;" class="badge bg-primary"
+						v-if="sealDeliverCount !=0">{{sealDeliverCount}}</span></a></li>
+					<li th:class="${msi==42 ? 'active' : ''}"><a
+						th:href="@{/back/sm/seal_deliver}"><i
+							class="fa fa-plus-square"></i> 已交付印章&nbsp;&nbsp;</a></li>
+				</ul></li>
+			<li th:class="'treeview ' + ${mi==5 ? 'active' : ''}"><a
+				href="${basePath}<%=INDEX_URL%>"> <i class="fa fa-cog"></i> <span>系统管理</span>
+					<i class="fa fa-angle-left pull-right"></i>
+			</a>
+				<ul class="treeview-menu">
+					<li th:class="${msi==51 ? 'active' : ''}"
+						th:if="${session.admin.lev == 1}"><a
+						th:href="@{/back/admin/admin_list}"><i class="fa fa-user"></i>
+							用户管理</a></li>
+					<li th:class="${msi==52 ? 'active' : ''}"><a
+						th:href="@{/back/admin/update_password}"><i class="fa fa-lock"></i>
+							修改密码</a></li>
+				</ul></li>
+		</ul>
+	</section>
+	<!-- /.sidebar -->
+	<script th:inline="javascript">
+var context = [[@{/}]]; 
+	var vueSidebar;
+	$(function(){ 
+		vueSidebar =new Vue({
+			el:".sidebar"
+			,data:{
+				auditConpanyCount:0,
+				auditSealCount:0,
+				sealDeliverCount:0
+			},methods:{
+				loadingCompanyAuditCount:function(){
+					$.post(context+"back/actions/company/listInAudit",{
+					},function(data){
+						vueSidebar.auditConpanyCount =data.result.total;
+					});
+				},loadingSealAuditCount:function(){
+					$.post(context+"back/actions/seal/listAudit",{
+					},function(data){
+						vueSidebar.auditSealCount=data.result.total;
+					});
+				},loadingSealDeliverCount:function(){
+					$.post(context+"back/actions/seal/undeliver",{
+					},function(data){
+						vueSidebar.sealDeliverCount=data.result.total;
+					});
+				}
+			}
+		});
+		init();
+		
+	});
+	function init(){
+		vueSidebar.loadingCompanyAuditCount();
+		vueSidebar.loadingSealAuditCount();
+		vueSidebar.loadingSealDeliverCount();
+		setTimeout(function(){
+			init();
+		},5000)
+	}
+	
+</script>
+</aside>

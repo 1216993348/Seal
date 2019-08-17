@@ -1,0 +1,307 @@
+<!DOCTYPE>
+<html>
+<head>
+<div th:replace="plugins/include_head_script.html"></div>
+<script type="text/javascript" th:src="@{/js/vue.min.js}"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>印章管理信息系统</title>
+<link th:href="@{/css/front_common.css}" rel="stylesheet"
+	type="text/css" />
+<link type="text/css" th:href="@{/lib/upload/ssi-uploader.min.css}"
+	rel="stylesheet">
+</head>
+<body>
+	<div th:include="plugins/front_include_top.html"></div>
+	<div class="content">
+		<div class="panel panel-info">
+			<div class="panel-heading">
+				<label>使用说明</label>
+			</div>
+			<div class="in" id="content-a">
+				<div>
+					<div style="margin: auto; width: 70%;">
+						<h4 style="text-align: center;">企业用户</h4>
+						1、企业注册备案，提交后等待审核，注册信息不可随意修改，如有修改需求请联系管理员。<br>
+						2、印章注册备案，提交后等待审核。<br> 3、查询企业信息后，输入密码查询该企业印章信息及其状态修改。<br>
+						<br>
+					</div>
+					<div style="margin: auto; width: 70%;">
+						<h4 style="text-align: center;">后台管理用户</h4>
+						1、输入用户名和密码进行系统登陆。<br>
+						2、登陆后可以对单位信息及其印章信息进行管理和审核。<br> 
+						3、用户可以修改自己的密码。<br> 
+						4、超级管理员，可以新增后台管理员用户。<br>
+						5、退出系统时，可以进行系统注销。<br>
+						<br>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="footer">
+		<div style="text-align: center;">版权所有 © 2019 白城师范学院计算机科学学院
+			吉ICP备16028103号-1</div>
+	</div>
+</body>
+<div class="modal fade" id="createSealInfo" tabindex="-1">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button class="close" type="button" data-dismiss="modal"
+					aria-hidden="true">&times;</button>
+				<h1>选择模板</h1>
+				<div class="container">
+					<div class="row">
+						<div class="col-md-2">
+							<div id="sealMenu" class="carousel slide" style="width: 160px;">
+								<ol class="carousel-indicators">
+								</ol>
+								<div class="carousel-inner">
+									<div v-bind:class="s.index == 0?'item active':'item'"
+										v-for="s in sealTemplates">
+										<div class="carousel-caption">模板{{s.index}}</div>
+										<img v-bind:src="s.name" width="150px;">
+									</div>
+								</div>
+								<a href="#sealMenu" class="carousel-control left"
+									data-slide="prev">&lsaquo;</a> <a href="#sealMenu"
+									class="carousel-control right" data-slide="next">&rsaquo;</a>
+							</div>
+						</div>
+						<div class="col-md-4">
+							<form action="" id="sealInfo">
+								<table class="table">
+									<tr>
+										<td class="text-right" width="30%"><label for="mainTitle">主文字：</label></td>
+										<td><input type="text" size="25" id="mainTitle"
+											name="mainTitle" /></td>
+									</tr>
+									<tr v-show="tIndex== 1||tIndex== 5||tIndex== 6 ">
+										<td class="text-right"><label for="viceTitle">副文字：</label></td>
+										<td><input type="text" size="25" id="viceTitle"
+											name="viceTitle" /></td>
+									</tr>
+									<tr v-show="tIndex== 3||tIndex== 4 ||tIndex== 5||tIndex== 6">
+										<td class="text-right"><label for="centerTitle">中心文字：</label></td>
+										<td><input type="text" size="25" id="centerTitle"
+											name="centerTitle" /></td>
+									</tr>
+									<tr v-show="tIndex== 2 || tIndex== 4">
+										<td class="text-right"><label for="topTitle">抬头文字：</label></td>
+										<td><input type="text" size="25" id="topTitle"
+											name="topTitle" /></td>
+									</tr>
+								</table>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<button class="btn btn-primary" data-loading-text="正在生成中..."
+					id="buildSealBtn" v-on:click="buildSeal">生成印章</button>
+			</div>
+		</div>
+	</div>
+</div>
+<script type="text/javascript" th:src="@{/lib/upload/ssi-uploader.js}"></script>
+<script th:inline="javascript">
+var context = [[@{/}]]; 
+	$(function() {
+		
+		$.validator.addMethod("photoNotNull",
+				function(value, element, params) {
+					if(document.getElementById("sealImg")  == null){
+						return false;
+					}else{
+						return true;
+					}
+					
+				}, function() {
+					return "图片不能为空";
+				});
+		validateParam("#sealForm", {
+			"cid" : { //针对此name元素进行验证
+				required : true//此字段不能为空
+				,photoNotNull : true
+			},"sname" : { //针对此name元素进行验证
+				required : true//此字段不能为空
+				
+			},
+			
+		}, function() {
+			$("#addSealBtn").button("loading");
+			alert($("#sname").val() + " , "+$("#cid").val() +" , "+app.fileName)
+			$.post(context+"back/actions/seal/add",{
+				sname:$("#sname").val()
+				,cid:companyListVue.cid
+				,photo:app.fileName
+			},function(data){
+				$("#addSealBtn").button("reset");
+				document.getElementById("sealForm").reset();
+				$("#sealImg").remove();
+				$(".ssi-uploader").remove();
+				$("#sealPhoto").remove();
+				app.addMethodStatus = 0;
+				operateAlert("#alertDiv", true, "添加成功！", "添加失败！");
+			});
+			
+		});
+		$("#carouselMenu").carousel({
+			interval : 2000
+		});
+	});
+	var app = new Vue({
+		el : ".content",
+		data:{
+			addMethodStatus:0
+			,fileName:""
+		},
+		methods: {
+			queryCompany : function() {
+				companyListVue.initCompanyList();//初始化列表
+				$("#queryCompanyInfo").modal("toggle");
+			}
+			,addMethod:function(){
+				app.addMethodStatus = 1;
+			}
+			,uploadFile:function(){
+				//$(".ssi-uploader").show();
+				app.addMethodStatus = 2;
+				$("#sealPhotoDiv").html('<input type="file" data-validate="required:" multiple id="sealPhoto" name="sealPhoto" v-show="false" />');
+				$("#sealPhoto").ssi_uploader({
+					url:context+'front/actions/seal/uploadPhoto' 
+					,preview:false
+					,locale:"gr"
+					,maxNumberOfFiles:1
+					,allowed:['jpg','gif','txt','png','pdf']
+					,onUpload:function(data){
+						app.fileName = data.result;
+						$("#sPhotoDiv").html("<img src='"+context+"temp/seal/"+data.result+"' id='sealImg' style='width: 200px; height:200px;' />")		
+						$("#sealForm").valid(); 
+					}
+				});
+				
+			}
+			,createSealPhoto:function(){
+				app.addMethodStatus = 0;
+				$(".ssi-uploader").remove();
+				$("#sealPhoto").remove();
+				$("#createSealInfo").modal("toggle");
+			}
+			,reset:function(){
+				$("#sealImg").remove();
+			}
+		}
+	});
+	var companyListVue = new Vue({
+		el : "#queryCompanyInfo",
+		data : {
+			companyList : [ ]
+			,queryStatus:1
+			,cid:""
+		},methods : {
+			query : function() {
+				$("#query").button("loading");
+				this.queryStatus=0;
+				app.queryStatus = false;
+				var province = $("#province").val();
+				var city = $("#city").val();
+				var cid = $("#cid").val();
+				var cname = $("#qcname").val();
+				if(province == "请选择" ){
+					province =null;
+				}
+				if(city == "请选择"){
+					city =null;
+				}
+				$.get(context+"back/actions/company/list",{
+					province:province
+					,city:city
+					,cid:cid
+					,cname:cname,
+					cp:jsCommonCp,ps:jsCommonPs=8,col:jsCommonCol,kw:jsCommonKw},function(data){
+					companyListVue.companyList = data.result.list;
+					createSplitBar(data,"#splitPageDiv",companyListVue.query);
+					$("#query").button("reset");
+					companyListVue.queryStatus = true;
+				});
+				//this.queryStatus=1;
+				//$("#query").button("reset");
+				
+				//$("#queryCompanyInfo").modal("toggle");
+			}
+			,select:function(cid,cname){
+				this.cid = cid;
+				$("#cname").val(cname);
+				$("#queryCompanyInfo").modal("toggle");
+				$("#sealForm").valid();
+			}
+			,initCompanyList(){
+				this.queryStatus=1;
+				$.get(context+"back/actions/company/list",{cp:1,ps:jsCommonPs=8,col:jsCommonCol,kw:jsCommonKw},function(data){
+					companyListVue.companyList = data.result.list;
+					createSplitBar(data,"#splitPageDiv",companyListVue.query);
+					if(jsCommonCp !=1 && data.result.list.length == 0){
+						jsCommonCp --;
+						app.loadList();
+					}
+				});
+			}
+		}
+	});
+	
+	
+	var createSealInfo = new Vue({
+		el:"#createSealInfo"
+		,data:{
+			sealTemplates:[
+				{index:0,name:context+"img/seal/seal-0.png"}
+				,{index:1,name:context+"img/seal/seal-1.png"}
+				,{index:2,name:context+"img/seal/seal-2.png"}
+				,{index:3,name:context+"img/seal/seal-3.png"}
+				,{index:4,name:context+"img/seal/seal-4.png"}
+				,{index:5,name:context+"img/seal/seal-5.png"}
+				,{index:6,name:context+"img/seal/seal-6.png"}
+			]
+			,tIndex:0
+		}
+		,methods:{
+			buildSeal:function(){
+				$("#buildSealBtn").button("loading");
+				var mainTitle = $("#mainTitle").val();
+				var viceTitle = $("#viceTitle").val();
+				var centerTitle = $("#centerTitle").val();
+				var topTitle = $("#topTitle").val();
+				/* console.log("正在生成" +createSealInfo.tIndex + " , 号模板");
+				console.log("mainTitle：" +mainTitle);
+				console.log("viceTitle：" +viceTitle);
+				console.log("centerTitle:" +centerTitle);
+				console.log("topTitle:" +topTitle); */
+				$.post(context+"front/actions/seal/createPhoto",{
+					mainTitle:mainTitle
+					,viceTitle:viceTitle
+					,centerTitle:centerTitle
+					,topTitle:topTitle
+					,version:createSealInfo.tIndex
+				},function(data){
+					app.fileName = data.result;
+					$("#sPhotoDiv").html("<img src='"+context+"temp/seal/"+data.result+"' id='sealImg' style='width: 200px; height:200px;'/>")		
+					$("#buildSealBtn").button("reset");
+					$("#createSealInfo").modal("toggle");
+					$("#sealForm").valid();
+				});
+			}
+		}
+	});
+	$("#sealMenu").carousel("pause");
+	$("#sealMenu").on("slid.bs.carousel",function(){
+		var src = $("[class='item active']").find("img").attr("src");
+		createSealInfo.tIndex= src.substring(src.indexOf('-')+1,src.indexOf('.'));
+		$("#viceTitle").val("");
+		$("#centerTitle").val("");
+		$("#topTitle").val("");
+	});
+
+</script>
+</html>

@@ -1,0 +1,32 @@
+server: 
+  port: 80
+spring:
+  jackson:
+    serialization:
+      write-dates-as-timestamps: true
+  servlet:
+    multipart:
+      max-file-size: 5MB  #单个文件上传大小
+      max-request-size: 5MB #总文件上传大小
+      location: / #上传临时目录
+      file-size-threshold: 1MB  #缓存超过512k时写入磁盘，太小耗费IO资源，太大耗费内存
+  messages:
+    basename: Validators
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource  # 配置数据源
+    driver-class-name: com.mysql.cj.jdbc.Driver      # 配置mysql驱动
+    url: jdbc:mysql://localhost:3306/sealdb?serverTimezone=Asia/Shanghai          # 数据库连接地址
+    username: root                           # 用户名
+    password: mysqladmin                      # 密码
+    dbcp2:                   #数据库连接池配置
+      min-idle: 5           #数据库连接池最小连接数
+      initial-size: 5           #初始连接数
+      max-total:  20          #最大连接数
+      max-wait-millis: 200    #等待连接获取的最大时间 
+
+mybatis:
+  config-location: classpath:mybatis/mybatis.cfg.xml  # mybatis配置文件
+  type-aliases-package: com.bcsfxy.vo      # 定义操作类的包
+  mapper-locations:                   # 定义mapper映射文件
+  - classpath:mybatis/mapper/**/*.xml 
+  

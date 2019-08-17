@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.bcsfxy.boot.dao.ICompanyDAO">
+	<insert id="doCreate" parameterType="Company">
+		INSERT INTO company(
+		<if test="cid!= null">
+			cid,
+		</if>
+		cname,cdesc,province,city,cdate,phone,leader,password,status)
+		VALUES(
+		<if test="cid!= null">
+			#{cid},
+		</if>
+		#{cname},#{cdesc},#{province},#{city},#{cdate},#{phone},#{leader},#{password},#{status})
+	</insert>
+	
+	<select id="findAll" resultType="Company" >
+		SELECT cid,cname,cdesc,province,city,cdate,phone,leader FROM company
+	</select>
+	<select id="findSplit" resultType="Company" parameterType="java.util.Map">
+		SELECT cid,cname,cdesc,province,city,cdate,phone,leader
+		FROM company
+		<where>
+			<foreach collection="map" index="key" item="value" separator="and">
+				${key} LIKE #{value}
+			</foreach>
+			AND status =1
+		</where>
+	</select>
+	<select id="findSplitInAudit" resultType="Company"
+		parameterType="java.util.Map">
+		SELECT cid,cname,cdesc,province,city,cdate,phone,leader
+		FROM company
+		<where>
+			<foreach collection="map" index="key" item="value" separator="and">
+				${key} LIKE #{value}
+			</foreach>
+			AND status =0
+		</where>
+	</select>
+	<select id="findAllByCidAndCname" parameterType="java.util.Map"
+		resultType="Company">
+		SELECT
+		cid,cname,cdesc,province,city,cdate,phone,leader,password,status FROM
+		company WHERE
+		cid LIKE #{cid} AND cname LIKE #{cname}
+	</select>
+
+	<select id="findById" parameterType="String" resultType="Company">
+		SELECT
+		cid,cname,cdesc,province,city,cdate,phone,leader,password,status FROM
+		company WHERE cid=#{cid}
+	</select>
+	<delete id="doRemoveById" parameterType="String">
+		DELETE FROM company
+		WHERE cid=#{cid}
+	</delete>
+	<update id="doUpdate" parameterType="Company">
+		UPDATE company
+		<set>
+			<if test="cname != null">
+				cname=#{cname},
+			</if>
+			<if test="cdesc != null">
+				cdesc=#{cdesc},
+			</if>
+			<if test="province != null">
+				province=#{province},
+			</if>
+			<if test="city != null">
+				city=#{city},
+			</if>
+			<if test="phone != null">
+				phone=#{phone},
+			</if>
+			<if test="leader != null">
+				leader=#{leader},
+			</if>
+			<if test="password !=null and password!=''">
+				password=#{password},
+			</if>
+			<if test="status != null">
+				status=#{status}
+			</if>
+		</set>
+		WHERE cid=#{cid}
+	</update>
+</mapper>

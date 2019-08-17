@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.bcsfxy.boot.dao.IAdminDAO">
+
+	<insert id="addSealMaker" parameterType="Admin">
+		INSERT INTO admin(aid,password,lev,state,createdate,smname,smphone,smdesc)
+		VALUES(#{aid},#{password},#{lev},#{state},#{createdate},#{smname},#{smphone},#{smdesc})
+	</insert>
+	<insert id="doCreate" parameterType="Admin">
+		INSERT INTO admin(aid,password,lev,state,lastdate,createdate,updatedate)
+		VALUES(#{aid},#{password},#{lev},#{state},#{lastdate},#{createdate},#{updatedate})
+	</insert>
+	<select id="findById" parameterType="String" resultType="Admin">
+		SELECT aid,password,lev,state,lastdate,createdate,updatedate,smname,smphone,smdesc FROM admin
+		WHERE aid=#{aid}
+	</select>
+	<select id="findSMSplitPage" parameterType="Map" resultType="Admin">
+		SELECT aid,lev,state,lastdate,createdate,updatedate,smname,smphone,smdesc 
+		FROM admin WHERE lev = 2
+		<if test="aid != null and aid !=''">
+			AND aid LIKE '%${aid}%'
+		</if>
+		<if test="smname != null and smname !=''">
+			AND smname LIKE '%${smname}%'
+		</if>
+		ORDER BY lev
+	</select>
+	<select id="findSplit" parameterType="String" resultType="Admin">
+		SELECT aid,lev,state,lastdate,createdate,updatedate FROM admin WHERE aid LIKE #{keyWord}
+		AND (lev = 0 OR lev = 1)
+		ORDER BY lev
+	</select>
+	<select id="findAllSM" resultType="Admin">
+		SELECT aid,lev,state,lastdate,createdate,updatedate,smname,smphone,smdesc 
+		FROM admin WHERE lev = 2
+	</select>
+	<update id="doUpdate" parameterType="Admin">
+		UPDATE admin
+		<set>
+			<if test="password != null">
+				password=#{password},
+			</if>
+			<if test="state != null">
+				state=#{state},
+			</if>
+			<if test="lastdate != null">
+				lastdate=#{lastdate},
+			</if>
+			<if test="updatedate != null">
+				updatedate=#{updatedate},
+			</if>
+			<if test="smname != null">
+				smname=#{smname},
+			</if>
+			<if test="smdesc != null">
+				smdesc=#{smdesc},
+			</if>
+			<if test="smphone != null">
+				smphone=#{smphone}
+			</if>
+		</set>
+		where aid=#{aid}
+	</update>
+	<delete id="doRemoveBatch" parameterType="String">
+		DELETE FROM admin 
+		where lev != 1
+		<foreach collection="ids" open="and aid in(" separator="," close=")" item="aid">
+			#{aid}
+		</foreach>
+	</delete>
+</mapper>

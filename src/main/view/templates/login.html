@@ -1,0 +1,73 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta charset="utf-8">
+<title>印章管理系统</title>
+<link type="text/css"
+	th:href="@{/lib/bootstrap-3.3.7-dist/css/bootstrap.min.css}" rel="stylesheet">
+<link type="text/css"
+	th:href="@{/dist/plugins/font-awesome/css/font-awesome.min.css}"
+	rel="stylesheet" />
+<link th:href="@{/css/login.css}" rel="stylesheet" type="text/css" />
+
+
+
+</head>
+<body>
+	<div class="bg"></div>
+	<h1 id="headline" class="demo-text">印 章 管 理 系 统</h1>
+	<div class="slick-login">
+		<div class="login-title">用户登录</div>
+		<form action="" class="login-form" id="loginForm">
+			<div class="input-group login-info">
+				<span class="input-group-addon"><i class="fa fa-user"></i></span> <input
+					type="text" class="form-control " placeholder="账号" name="aid" id="aid">
+			</div>
+			<div class="input-group login-info">
+				<span class="input-group-addon"><i class="fa fa-lock"></i></span> <input
+					type="password" class="form-control " placeholder="密码" name="password" id="password">
+			</div>
+			<div class="input-group login-submit">
+				<button id="submit" type="submit" class="btn btn-primary" style="height: 35px;" data-loading-text="正在登陆..." >
+					<i class="fa fa-key" > 登 录</i>
+				</button>
+			</div>
+		</form>
+	</div>
+	
+</body>
+<script type="text/javascript" th:src="@{/js/jquery-3.1.1.min.js}"></script>
+<script th:src='@{/js/login/shine.min.js}'></script>
+<script th:src="@{/js/login/index.js}"></script>
+<script type="text/javascript" th:src="@{/jquery/jquery.validate.min.js}"></script>
+<script type="text/javascript" th:src="@{/jquery/additional-methods.min.js}"></script>
+<script type="text/javascript" th:src="@{/jquery/Message_zh_CN.js}"></script>
+<script type="text/javascript" th:src="@{/lib/bootstrap-3.3.7-dist/js/bootstrap.js}"></script>
+<script type="text/javascript" th:src="@{/js/util.js}"></script>
+<script th:inline="javascript">
+validateParam("#loginForm", {
+	"aid" : { 
+		required : true//此字段不能为空
+
+	},
+	"psw" : {
+		required : true//此字段不能为空
+		//rangelength: [3,6],//设置范围长度
+	}
+}, function() {
+	$("#submit").button("loading");
+	$.post([[@{/login}]],{
+		aid:$("#aid").val()
+		,password:$("#password").val()
+	},function(result){
+		if(result.state){
+			window.location =[[@{/back/index}]];
+		}else{
+			alert(result.message);
+		}
+		$("#submit").button("reset");
+		
+	});
+});
+</script>
+</html>
